@@ -4,6 +4,7 @@ import { Store, formatPrice } from './store.js';
 import { Printer } from './printer.js';
 import { renderLabel, canvasToBitmap } from './render.js';
 import { isSupported } from './ble.js';
+import * as fullscreen from './fullscreen.js';
 import { printLabels } from './job.js';
 
 const $ = (id) => document.getElementById(id);
@@ -340,6 +341,35 @@ $('fDelete').addEventListener('click', () => {
 
 $('labelW').addEventListener('change', (e) => { store.updateSettings({ labelWidthMm: Number(e.target.value) }); paintPreview(); });
 $('labelH').addEventListener('change', (e) => { store.updateSettings({ labelHeightMm: Number(e.target.value) }); paintPreview(); });
+// ── fullscreen ────────────────────────────────────────────────────────────
+
+function paintFullscreenSupport(note) {
+  const supported = fullscreen.isSupported();
+  $('autoFullscreen').disabled = !supported;
+  $('btnFullscreen').disabled = !supported;
+  $('fullscreenSupport').textContent = note || (supported
+    ? 'Bluefy forgets its own fullscreen setting between launches, so the app asks for it instead.'
+    : 'This browser will not let a page go fullscreen. Use Bluefy\u2019s own fullscreen button each time.');
+}
+
+$('autoFullscreen').addEventListener('change', (e) => {
+  store.updateSettings({ autoFullscreen: e.target.checked });
+});
+
+$('btnFullscreen').addEventListener('click', async () => {
+  try {
+    await fullscreen.enter();
+    paintFullscreenSupport('Fullscreen on.');
+  } catch (err) {
+    paintFullscreenSupport(`This browser refused: ${err.message || err.name}`);
+  }
+});
+
+fullscreen.armOnFirstGesture(
+  () => store.settings.autoFullscreen !== false,
+  (ok, err) => { if (!ok) plog(`auto fullscreen failed: ${err && (err.message || err.name)}`); }
+);
+
 $('printerNickname').addEventListener('input', (e) => {
   store.updateSettings({ printerNickname: e.target.value });
   paintPrinterState();
@@ -433,6 +463,8 @@ function boot() {
   $('labelW').value = store.settings.labelWidthMm;
   $('labelH').value = store.settings.labelHeightMm;
   $('printerNickname').value = store.settings.printerNickname || '';
+  $('autoFullscreen').checked = store.settings.autoFullscreen !== false;
+  paintFullscreenSupport();
   $('density').value = store.settings.density;
   $('densityValue').textContent = String(store.settings.density);
   paintLocations();

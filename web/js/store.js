@@ -14,7 +14,7 @@ function blank() {
     locations: [],
     activeLocationId: null,
     labels: [],
-    settings: { labelWidthMm: 40, labelHeightMm: 30, density: 6, printerNickname: "Jana's Tag Printer" },
+    settings: { labelWidthMm: 40, labelHeightMm: 30, density: 6, printerNickname: "Jana's Tag Printer", autoFullscreen: true },
   };
 }
 
