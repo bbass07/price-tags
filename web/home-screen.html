@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Price Tags — Home Screen icon</title>
+<link rel="stylesheet" href="app.css">
+<style>
+  main { max-width: 620px; }
+  ol { padding-left: 22px; }
+  li { margin-bottom: 10px; }
+  .scheme {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 10px; padding: 12px; margin-bottom: 8px;
+    text-decoration: none; color: var(--text);
+  }
+  .scheme code { flex: 1; font: 13px ui-monospace, Menlo, monospace; word-break: break-all; }
+  .scheme span { font-size: 20px; }
+  .iconshot { display: block; width: 128px; height: 128px; border-radius: 28px; margin: 12px 0; }
+</style>
+</head>
+<body>
+<header class="topbar"><h1>Home Screen icon</h1></header>
+<main>
+
+<div class="card">
+  <h2>The reliable way</h2>
+  <p class="muted">This works today and needs nothing from Bluefy.</p>
+  <ol>
+    <li>Open the <b>Shortcuts</b> app → <b>+</b> → <b>Add Action</b>.</li>
+    <li>Search <b>Open App</b>, pick it, then choose <b>Bluefy</b>.</li>
+    <li>Tap the shortcut's name at the top → <b>Add to Home Screen</b>.</li>
+    <li>Name it <b>Price Tags</b>, tap the icon square → <b>Choose Photo</b> and pick the
+      icon below (long-press it first and save it to Photos).</li>
+  </ol>
+  <p class="muted">Bluefy reopens on the page you left, so with fullscreen mode on you land
+  straight in the app. There is a brief flash from Shortcuts on the way through — that is
+  the one rough edge.</p>
+  <img class="iconshot" src="icon-512.png" alt="Price Tags icon — long-press to save it to Photos">
+</div>
+
+<div class="card">
+  <h2>Test: can Bluefy be opened by link?</h2>
+  <p class="muted">Bluefy says it supports a custom URL scheme but does not publish which one.
+  Tap each of these <b>in Safari</b>. The one that offers to open Bluefy is the answer —
+  tell Claude which it was and the shortcut can skip the flash and go straight to the app.</p>
+  <div id="list"></div>
+  <p class="muted">A tap that does nothing, or shows "Safari cannot open the page", means
+  that scheme is not it. That is expected for most of them.</p>
+</div>
+
+<div class="card">
+  <h2>Do not use Safari's "Add to Home Screen"</h2>
+  <p class="muted">It makes a convincing looking app, but it runs on Safari's engine, which
+  has no Bluetooth at all. It will never find the printer.</p>
+</div>
+
+<p class="muted"><a href="./">← back to Price Tags</a></p>
+</main>
+
+<script>
+  const target = 'bbass07.github.io/price-tags/';
+  const candidates = [
+    'bluefy://' + target,
+    'bluefys://' + target,
+    'bluefy://open?url=https://' + target,
+    'bluefy://x-callback-url/open?url=' + encodeURIComponent('https://' + target),
+    'bluefy-browser://' + target,
+    'pnnsoft-bluefy://' + target,
+  ];
+  document.getElementById('list').innerHTML = candidates
+    .map((u) => `<a class="scheme" href="${u}"><span>→</span><code>${u}</code></a>`)
+    .join('');
+</script>
+</body>
+</html>
