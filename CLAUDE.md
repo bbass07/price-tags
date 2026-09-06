@@ -114,7 +114,33 @@ bluefy://open?url=https%3A%2F%2Fbbass07.github.io%2Fprice-tags%2F
 the address; only the `open?url=` form navigates. `web/home-screen.html` holds
 the instructions, a copy button, and a retest harness in case Bluefy changes it.
 
-Not done yet:
+### Settled, do not relitigate
+
+- **Fullscreen on iPhone is impossible from the page.** WebKit on iPhone has no
+  element fullscreen, and every iOS browser is built on WebKit, so Bluefy
+  exposes `requestFullscreen` and ignores it. The app detects that, records
+  `settings.fullscreenBroken`, and stops offering the control. Bluefy's own
+  fullscreen button works but it forgets the setting between launches — a
+  Bluefy bug, not reachable from here.
+- **Renaming the printer over Bluetooth** is not worth attempting. The write
+  opcodes exist (`WR_DEV_OPT` 0x68, `WR_DEV_PAR` 0x6A) but their payloads are
+  undocumented and they sit beside the firmware-update range; the reference
+  driver refuses to send them on purpose. The app uses a local nickname instead
+  (`settings.printerNickname`).
+
+### Open work
+
 - Bulk entry / editing of a large library — adding labels one at a time is fine
-  for a handful, tedious for hundreds.
+  for a handful, tedious for hundreds. This is the owner's most likely next ask.
 - No barcode support; labels are text only.
+- Untried: **BLE Link**, a second free Web BLE browser on the App Store. If its
+  fullscreen persists across launches it replaces Bluefy outright, and the Home
+  Screen shortcut would need its URL scheme instead.
+
+### Working on this project
+
+The owner is not a programmer. Explain in plain terms and skip the jargon.
+Verify against real behaviour rather than reasoning about it — every bug found
+here so far (mirrored print, the trapped editor, the silent Bluetooth failure)
+was invisible until something real was run. `tools/serve.mjs` plus Chrome on the
+Mac is the fast loop; the phone is the truth.
