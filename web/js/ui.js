@@ -49,10 +49,15 @@ function plog(msg) {
 }
 printer.addEventListener('log', (e) => plog(e.detail));
 
+/** What to call the printer on screen: the user's nickname, else its real name. */
+function printerLabel() {
+  return (store.settings.printerNickname || '').trim() || printer.name || 'Printer';
+}
+
 function paintPrinterState() {
   const on = printer.connected;
   $('printerChip').className = `chip ${on ? 'chip--ok' : 'chip--bad'}`;
-  $('printerChipText').textContent = on ? (printer.name || 'Printer') : 'No printer';
+  $('printerChipText').textContent = on ? printerLabel() : 'No printer';
   $('btnConnect').hidden = on;
   $('btnDisconnect').hidden = !on;
   if (!on) {
@@ -60,7 +65,9 @@ function paintPrinterState() {
     return;
   }
   const info = printer.info;
-  const bits = [`Connected to ${printer.name || 'printer'}.`];
+  // Show the hardware name alongside, so the Bluetooth chooser still makes sense.
+  const hardware = printer.name && printer.name !== printerLabel() ? ` (${printer.name})` : '';
+  const bits = [`Connected to ${printerLabel()}${hardware}.`];
   if (info?.firmware) bits.push(`Firmware ${info.firmware}.`);
   const problems = info?.status?.problems || [];
   bits.push(problems.length ? `Needs attention: ${problems.join(', ')}.` : 'Ready.');
@@ -333,6 +340,10 @@ $('fDelete').addEventListener('click', () => {
 
 $('labelW').addEventListener('change', (e) => { store.updateSettings({ labelWidthMm: Number(e.target.value) }); paintPreview(); });
 $('labelH').addEventListener('change', (e) => { store.updateSettings({ labelHeightMm: Number(e.target.value) }); paintPreview(); });
+$('printerNickname').addEventListener('input', (e) => {
+  store.updateSettings({ printerNickname: e.target.value });
+  paintPrinterState();
+});
 $('density').addEventListener('input', (e) => {
   const v = Number(e.target.value);
   $('densityValue').textContent = String(v);
@@ -421,6 +432,7 @@ function refreshLists() {
 function boot() {
   $('labelW').value = store.settings.labelWidthMm;
   $('labelH').value = store.settings.labelHeightMm;
+  $('printerNickname').value = store.settings.printerNickname || '';
   $('density').value = store.settings.density;
   $('densityValue').textContent = String(store.settings.density);
   paintLocations();

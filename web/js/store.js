@@ -14,7 +14,7 @@ function blank() {
     locations: [],
     activeLocationId: null,
     labels: [],
-    settings: { labelWidthMm: 40, labelHeightMm: 30, density: 6 },
+    settings: { labelWidthMm: 40, labelHeightMm: 30, density: 6, printerNickname: "Jana's Tag Printer" },
   };
 }
 
@@ -135,7 +135,7 @@ export class Store extends EventTarget {
     const incoming = JSON.parse(text);
     if (!incoming || !Array.isArray(incoming.labels)) throw new Error('That file is not a label backup.');
     if (mode === 'replace') {
-      this.data = { ...blank(), ...incoming };
+      this.data = { ...blank(), ...incoming, settings: { ...blank().settings, ...(incoming.settings || {}) } };
     } else {
       const haveLabels = new Set(this.data.labels.map((l) => l.id));
       const haveLocs = new Set(this.data.locations.map((l) => l.id));

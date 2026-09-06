@@ -55,6 +55,9 @@
         <button id="btnDisconnect" class="btn btn--ghost" type="button" hidden>Disconnect</button>
       </div>
       <label class="check"><input type="checkbox" id="showAllDevices"> Show every Bluetooth device</label>
+      <label class="field"><span>What to call it</span>
+        <input id="printerNickname" class="input" maxlength="40" autocomplete="off" placeholder="Jana's Tag Printer"></label>
+      <p class="muted">Only changes what this app calls the printer. The Bluetooth list still shows the name built into the hardware.</p>
       <details class="diag" id="diagBox">
         <summary>Diagnostics</summary>
         <pre id="printerLog"></pre>
