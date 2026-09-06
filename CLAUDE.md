@@ -93,8 +93,11 @@ Working and verified:
 Live at **https://bbass07.github.io/price-tags/** (repo `bbass07/price-tags`,
 deployed from `web/` by `.github/workflows/pages.yml` on every push to `main`).
 
+**End-to-end print confirmed on real hardware (2026-09-06)** from Bluefy on an
+iPhone: connect, render, compress, transfer, print. The 8-dot feed margin
+inherited from the reference driver is correct in practice.
+
 Not done yet:
-- **A real print has never been sent.** Everything up to the Bluetooth write is
-  verified; the printer's own reaction is not.
-- The 8-dot feed margin is taken from the reference driver; it may need
-  adjusting once real labels come out and can be measured against the gap.
+- Bulk entry / editing of a large library — adding labels one at a time is fine
+  for a handful, tedious for hundreds.
+- No barcode support; labels are text only.
