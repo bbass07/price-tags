@@ -15,6 +15,9 @@
     border-radius: 10px; padding: 12px; margin-bottom: 8px;
     text-decoration: none; color: var(--text);
   }
+  pre { background: var(--bg); padding: 10px; border-radius: 8px; overflow-x: auto;
+        font: 12px ui-monospace, Menlo, monospace; }
+  details.card summary { cursor: pointer; }
   .scheme code { flex: 1; font: 13px ui-monospace, Menlo, monospace; word-break: break-all; }
   .scheme span { font-size: 20px; }
   .iconshot { display: block; width: 128px; height: 128px; border-radius: 28px; margin: 12px 0; }
@@ -25,33 +28,36 @@
 <main>
 
 <div class="card">
-  <h2>The reliable way</h2>
-  <p class="muted">This works today and needs nothing from Bluefy.</p>
-  <ol>
-    <li>Open the <b>Shortcuts</b> app → <b>+</b> → <b>Add Action</b>.</li>
-    <li>Search <b>Open App</b>, pick it, then choose <b>Bluefy</b>.</li>
-    <li>Tap the shortcut's name at the top → <b>Add to Home Screen</b>.</li>
-    <li>Name it <b>Price Tags</b>, tap the icon square → <b>Choose Photo</b> and pick the
-      icon below (long-press it first and save it to Photos).</li>
-  </ol>
-  <p class="muted">Bluefy reopens on the page you left, so with fullscreen mode on you land
-  straight in the app. There is a brief flash from Shortcuts on the way through — that is
-  the one rough edge.</p>
-  <img class="iconshot" src="icon-512.png" alt="Price Tags icon — long-press to save it to Photos">
+  <h2>Put it on your Home Screen</h2>
+  <p class="muted">Confirmed working on this phone: Bluefy opens a specific page when handed
+  a <code>bluefy://open?url=</code> link. A Shortcut wraps that in a Home Screen icon.</p>
+
+  <p><b>1.</b> Save the icon &mdash; long-press it, then <b>Add to Photos</b>.</p>
+  <img class="iconshot" src="icon-512.png" alt="Price Tags icon">
+
+  <p><b>2.</b> Copy the link:</p>
+  <button id="copyLink" class="btn btn--primary" type="button">Copy the link</button>
+  <pre id="linkText"></pre>
+
+  <p><b>3.</b> Open <b>Shortcuts</b> &rarr; <b>+</b> &rarr; <b>Add Action</b>. Search for
+  <b>Open URLs</b> and pick it. Tap the <i>URL</i> field and paste.</p>
+
+  <p><b>4.</b> Tap the shortcut&rsquo;s name at the top &rarr; <b>Rename</b> it
+  <b>Price Tags</b>, then <b>Add to Home Screen</b>. Tap the icon square &rarr;
+  <b>Choose Photo</b> and pick the icon you saved.</p>
+
+  <p class="muted">Tapping it now goes straight to Price Tags inside Bluefy. Turn Bluefy&rsquo;s
+  fullscreen mode on and there is no address bar either. You will still see a brief flash from
+  Shortcuts on the way through &mdash; that is unavoidable, and it is the last visible seam.</p>
 </div>
 
-<div class="card">
-  <h2>Test: can Bluefy be opened by link?</h2>
-  <p class="muted">Tap each of these <b>in Safari</b> and let it open Bluefy. Once
-  <code>bluefy://</code> is registered, iOS offers to open the app for <em>any</em> link
-  starting that way, so "it opened Bluefy" proves nothing by itself. What counts is where
-  Bluefy lands: each link points at a page that shows its own number.
-  <b>Only a scheme that puts a number on screen actually works.</b> If Bluefy just sits on
-  whatever page it had open before, that scheme opened the app and threw the address away.</p>
+<details class="card">
+  <summary class="muted">If it ever stops working &mdash; retest the schemes</summary>
+  <p class="muted">Bluefy could change this in an update. Tap each link in Safari; only a
+  scheme that lands on a page showing its own number actually carries the address. Number 3
+  was the winner last time.</p>
   <div id="list"></div>
-  <p class="muted">Between each test, tap through to some other page in Bluefy first &mdash;
-  otherwise a page left over from the previous attempt can look like a success.</p>
-</div>
+</details>
 
 <div class="card">
   <h2>Do not use Safari's "Add to Home Screen"</h2>
@@ -78,6 +84,27 @@
   document.getElementById('list').innerHTML = candidates
     .map(([u, n]) => `<a class="scheme" href="${u}"><span>${n}</span><code>${u}</code></a>`)
     .join('');
+
+  // The confirmed one: Bluefy takes the target as an encoded url= parameter.
+  const APP = 'https://bbass07.github.io/price-tags/';
+  const deepLink = 'bluefy://open?url=' + encodeURIComponent(APP);
+  document.getElementById('linkText').textContent = deepLink;
+  document.getElementById('copyLink').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    try {
+      await navigator.clipboard.writeText(deepLink);
+      btn.textContent = 'Copied';
+    } catch {
+      // Clipboard is blocked in some in-app browsers; select it instead.
+      const pre = document.getElementById('linkText');
+      const r = document.createRange();
+      r.selectNodeContents(pre);
+      getSelection().removeAllRanges();
+      getSelection().addRange(r);
+      btn.textContent = 'Selected — long-press to copy';
+    }
+    setTimeout(() => { btn.textContent = 'Copy the link'; }, 2500);
+  });
 </script>
 </body>
 </html>

@@ -97,6 +97,23 @@ deployed from `web/` by `.github/workflows/pages.yml` on every push to `main`).
 iPhone: connect, render, compress, transfer, print. The 8-dot feed margin
 inherited from the reference driver is correct in practice.
 
+## Getting it onto the Home Screen
+
+Bluefy has no "Add to Home Screen", and Safari's version is a trap — it makes a
+convincing standalone app that runs on WebKit and therefore can never reach the
+printer. Third-party engines that could install a real web app are EU-only.
+
+The working route is an iOS Shortcut using Bluefy's deep link, confirmed on the
+owner's phone (2026-09-06):
+
+```
+bluefy://open?url=https%3A%2F%2Fbbass07.github.io%2Fprice-tags%2F
+```
+
+`bluefy://<host>/<path>` and the x-callback form both open the app but discard
+the address; only the `open?url=` form navigates. `web/home-screen.html` holds
+the instructions, a copy button, and a retest harness in case Bluefy changes it.
+
 Not done yet:
 - Bulk entry / editing of a large library — adding labels one at a time is fine
   for a handful, tedious for hundreds.
