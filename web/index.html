@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111417">
+<title>Price Tags</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<header class="topbar">
+  <h1 id="viewTitle">Print</h1>
+  <button id="printerChip" class="chip chip--bad" type="button">
+    <span class="dot"></span><span id="printerChipText">No printer</span>
+  </button>
+</header>
+
+<main>
+  <!-- ───────────────────────── Print ───────────────────────── -->
+  <section id="view-print" class="view">
+    <div class="locbar" id="locBar"></div>
+
+    <div class="searchrow">
+      <input id="printSearch" class="input" type="search" placeholder="Search labels" autocomplete="off">
+      <button id="clearQueue" class="btn btn--ghost" type="button">Clear</button>
+    </div>
+
+    <ul id="printList" class="list"></ul>
+    <p id="printEmpty" class="empty" hidden>No labels yet. Add some on the <b>Labels</b> tab.</p>
+  </section>
+
+  <!-- ───────────────────────── Labels ──────────────────────── -->
+  <section id="view-labels" class="view" hidden>
+    <div class="searchrow">
+      <input id="labelSearch" class="input" type="search" placeholder="Search labels" autocomplete="off">
+      <button id="newLabel" class="btn btn--primary" type="button">+ New</button>
+    </div>
+    <ul id="labelList" class="list"></ul>
+    <p id="labelEmpty" class="empty" hidden>Your label library is empty. Tap <b>+ New</b> to make your first price tag.</p>
+  </section>
+
+  <!-- ───────────────────────── Setup ───────────────────────── -->
+  <section id="view-setup" class="view" hidden>
+    <div class="card">
+      <h2>Printer</h2>
+      <p id="printerState" class="muted">Not connected.</p>
+      <div class="row">
+        <button id="btnConnect" class="btn btn--primary" type="button">Connect printer</button>
+        <button id="btnDisconnect" class="btn btn--ghost" type="button" hidden>Disconnect</button>
+      </div>
+      <label class="check"><input type="checkbox" id="showAllDevices"> Show every Bluetooth device</label>
+      <p id="bleWarning" class="warn" hidden></p>
+      <details class="diag">
+        <summary>Diagnostics</summary>
+        <pre id="printerLog"></pre>
+      </details>
+    </div>
+
+    <div class="card">
+      <h2>Locations</h2>
+      <p class="muted">Each location has its own booth number. The booth number is printed at the top of every label.</p>
+      <ul id="locList" class="list list--tight"></ul>
+      <div class="row">
+        <input id="newLocName" class="input" placeholder="Location name" autocomplete="off">
+        <input id="newLocBooth" class="input input--short" placeholder="Booth #" autocomplete="off">
+        <button id="addLoc" class="btn btn--primary" type="button">Add</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Label size</h2>
+      <div class="row">
+        <label class="field"><span>Width (mm)</span><input id="labelW" class="input input--short" type="number" min="20" max="50" step="1"></label>
+        <label class="field"><span>Height (mm)</span><input id="labelH" class="input input--short" type="number" min="10" max="120" step="1"></label>
+      </div>
+      <p class="muted">The printer's head is 48 mm wide, so 50 mm is the widest roll it takes.</p>
+      <label class="field"><span>Darkness — <b id="densityValue">6</b></span>
+        <input id="density" type="range" min="1" max="15" step="1"></label>
+      <p class="muted">Turn it up if the print is faint, down if it smudges or bleeds.</p>
+    </div>
+
+    <div class="card">
+      <h2>Backup</h2>
+      <p class="muted">Your labels live on this device only. Export a copy now and then.</p>
+      <div class="row">
+        <button id="btnExport" class="btn" type="button">Export</button>
+        <button id="btnImport" class="btn btn--ghost" type="button">Import</button>
+        <input id="importFile" type="file" accept="application/json,.json" hidden>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- sticky print bar -->
+<div id="printBar" class="printbar" hidden>
+  <div class="printbar__count"><b id="queueCount">0</b> labels · <span id="queueLoc"></span></div>
+  <button id="btnPrint" class="btn btn--primary btn--wide" type="button">Print</button>
+</div>
+
+<nav class="tabs">
+  <button class="tab is-active" data-view="print" type="button">Print</button>
+  <button class="tab" data-view="labels" type="button">Labels</button>
+  <button class="tab" data-view="setup" type="button">Setup</button>
+</nav>
+
+<!-- ───────────────────── label editor sheet ───────────────────── -->
+<dialog id="editor" class="sheet">
+  <form method="dialog" id="editorForm">
+    <h2 id="editorTitle">New label</h2>
+    <label class="field"><span>Item name</span>
+      <input id="fName" class="input" required maxlength="80" autocomplete="off"></label>
+    <label class="field"><span>Price</span>
+      <input id="fPrice" class="input" inputmode="decimal" maxlength="24" autocomplete="off" placeholder="12.50 or 3 for $10"></label>
+    <label class="field"><span>Second line <em>(optional)</em></span>
+      <input id="fNote" class="input" maxlength="60" autocomplete="off" placeholder="e.g. Vintage · 1970s"></label>
+
+    <div class="preview">
+      <canvas id="previewCanvas"></canvas>
+      <span class="preview__cap">Actual size preview</span>
+    </div>
+
+    <div class="sheet__actions">
+      <button id="fDelete" class="btn btn--danger" type="button" hidden>Delete</button>
+      <span class="spacer"></span>
+      <button class="btn btn--ghost" value="cancel" type="submit">Cancel</button>
+      <button id="fSave" class="btn btn--primary" value="save" type="submit">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" class="toast" hidden></div>
+
+<script type="module" src="js/ui.js"></script>
+</body>
+</html>

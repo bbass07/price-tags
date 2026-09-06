@@ -1,0 +1,11 @@
+# Reverse-engineered driver we read but do not own.
+# Re-fetch with:  git clone --depth 1 https://github.com/heeen/supvan-cups reference/supvan-cups
+reference/
+
+# Built diagnostic tool
+tools/ble-probe.app/
+tools/ble-probe
+tools/dev.log
+tools/serve.out
+
+.DS_Store
