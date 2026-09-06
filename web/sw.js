@@ -3,12 +3,13 @@
 // Network-first: online you always get the current version, so an update is
 // never invisible. Offline you get the last copy that loaded.
 
-const CACHE = 'pricetags-v1';
+const CACHE = 'pricetags-v2';
 const SHELL = [
   './', './index.html', './app.css', './manifest.webmanifest',
   './js/ui.js', './js/store.js', './js/render.js', './js/printer.js',
   './js/ble.js', './js/frames.js', './js/bitmap.js', './js/job.js', './js/lzma.js',
   './vendor/lzma.js',
+  './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png',
 ];
 
 self.addEventListener('install', (e) => {
