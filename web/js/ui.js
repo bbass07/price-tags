@@ -365,5 +365,10 @@ function boot() {
 
 boot();
 
+// Offline support. Harmless where the browser has no service workers.
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register(new URL('../sw.js', import.meta.url)).catch(() => {});
+}
+
 // Exposed for console poking during development.
 window.app = { store, printer, queue, renderLabel, canvasToBitmap };

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Price tag">
+  <rect width="512" height="512" rx="112" fill="#111417"/>
+  <rect x="96" y="128" width="320" height="256" rx="20" fill="#ffffff"/>
+  <rect x="96" y="128" width="320" height="72" rx="20" fill="#1a63d8"/>
+  <rect x="96" y="176" width="320" height="24" fill="#1a63d8"/>
+  <rect x="140" y="240" width="232" height="26" rx="13" fill="#c3c9d2"/>
+  <text x="256" y="352" font-family="Helvetica, Arial, sans-serif" font-size="86" font-weight="700"
+        text-anchor="middle" fill="#111417">$</text>
+</svg>
