@@ -3,9 +3,9 @@
 // Network-first: online you always get the current version, so an update is
 // never invisible. Offline you get the last copy that loaded.
 
-const CACHE = 'pricetags-v3';
+const CACHE = 'pricetags-v4';
 const SHELL = [
-  './', './index.html', './app.css', './manifest.webmanifest', './home-screen.html',
+  './', './index.html', './app.css', './manifest.webmanifest', './home-screen.html', './landed.html',
   './js/ui.js', './js/store.js', './js/render.js', './js/printer.js',
   './js/ble.js', './js/frames.js', './js/bitmap.js', './js/job.js', './js/lzma.js',
   './vendor/lzma.js',

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scheme test — landed</title>
+<link rel="stylesheet" href="app.css">
+<style>
+  main { max-width: 620px; text-align: center; padding-top: 40px; }
+  .big { font-size: 64px; font-weight: 700; margin: 0; }
+  .verdict { font-size: 20px; font-weight: 600; margin: 8px 0 20px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="card">
+    <p class="muted">Scheme number</p>
+    <p class="big" id="num">?</p>
+    <p class="verdict" id="verdict">This scheme navigates properly.</p>
+    <p class="muted">If you are seeing this page, the link you tapped did not just open
+    Bluefy — it carried the address across too. That is the one to use.</p>
+    <p class="muted">Tell Claude this number.</p>
+  </div>
+  <p class="muted"><a href="./home-screen.html">← back to the tester</a> ·
+     <a href="./">open Price Tags</a></p>
+</main>
+<script>
+  const n = new URLSearchParams(location.search).get('s');
+  document.getElementById('num').textContent = n || '?';
+  if (!n) document.getElementById('verdict').textContent = 'Opened without a scheme number.';
+</script>
+</body>
+</html>
