@@ -47,16 +47,18 @@
   <section id="view-setup" class="view" hidden>
     <div class="card">
       <h2>Printer</h2>
+      <p id="bleWarning" class="banner" hidden></p>
       <p id="printerState" class="muted">Not connected.</p>
+      <p id="printerError" class="banner banner--bad" hidden></p>
       <div class="row">
         <button id="btnConnect" class="btn btn--primary" type="button">Connect printer</button>
         <button id="btnDisconnect" class="btn btn--ghost" type="button" hidden>Disconnect</button>
       </div>
       <label class="check"><input type="checkbox" id="showAllDevices"> Show every Bluetooth device</label>
-      <p id="bleWarning" class="warn" hidden></p>
-      <details class="diag">
+      <details class="diag" id="diagBox">
         <summary>Diagnostics</summary>
         <pre id="printerLog"></pre>
+        <button id="btnCopyLog" class="btn btn--ghost" type="button">Copy diagnostics</button>
       </details>
     </div>
 

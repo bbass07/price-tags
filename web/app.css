@@ -79,6 +79,17 @@ main { padding: 16px; max-width: 720px; margin: 0 auto; }
 .spacer { flex: 1; }
 .muted { color: var(--muted); font-size: 14px; margin: 0; }
 .warn { color: var(--danger); font-size: 14px; margin: 0; }
+.banner {
+  margin: 0; padding: 10px 12px; border-radius: 10px; font-size: 14px; line-height: 1.4;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.banner--bad {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+  color: var(--danger);
+}
+.banner code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
 .empty { color: var(--muted); text-align: center; padding: 32px 16px; }
 
 /* ── controls ────────────────────────────────────────────── */

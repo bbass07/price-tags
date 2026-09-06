@@ -70,9 +70,45 @@ function paintPrinterState() {
 printer.addEventListener('connected', paintPrinterState);
 printer.addEventListener('disconnected', () => { toast('Printer disconnected', true); paintPrinterState(); });
 
+/**
+ * Turn whatever the Bluetooth stack threw into something a human can act on.
+ * Chrome and Bluefy both report failures as bare DOMExceptions, sometimes with
+ * an empty message, so the error *name* is usually the only real signal.
+ */
+function explainConnectError(err) {
+  const name = err && err.name ? err.name : 'Error';
+  const detail = (err && err.message ? String(err.message) : '').trim();
+  switch (name) {
+    case 'NotFoundError':
+      return detail.includes('chooser')
+        ? { fatal: false, text: 'You closed the device list without picking anything.' }
+        : { fatal: true, text: 'No printer appeared in the list. Make sure it is switched on and not already connected to the Katasymbol app on your phone — a printer can only talk to one thing at a time. Ticking "Show every Bluetooth device" also helps if it is advertising under a different name.' };
+    case 'SecurityError':
+      return { fatal: true, text: 'The browser blocked Bluetooth on this page. It has to be loaded over https:// or from localhost.' };
+    case 'NotAllowedError':
+      return { fatal: true, text: 'Bluetooth permission was refused. On a Mac, check System Settings → Privacy & Security → Bluetooth and make sure your browser is switched on there, then quit the browser fully and reopen it.' };
+    case 'NetworkError':
+      return { fatal: true, text: 'The printer was found but dropped the connection. Turn it off and on and try again.' };
+    case 'NotSupportedError':
+      return { fatal: true, text: 'This browser cannot do Bluetooth. Use Chrome on a computer, or the Bluefy app on iPhone.' };
+    default:
+      return { fatal: true, text: detail || `Bluetooth failed with "${name}" and gave no reason. The diagnostics below have the details.` };
+  }
+}
+
+function showPrinterError(text) {
+  const el = $('printerError');
+  if (!text) { el.hidden = true; el.textContent = ''; return; }
+  el.hidden = false;
+  el.textContent = text;
+  $('diagBox').open = true;
+}
+
 $('btnConnect').addEventListener('click', async () => {
   const btn = $('btnConnect');
   btn.disabled = true;
+  showPrinterError('');
+  plog(`connect requested — ${navigator.bluetooth ? 'Web Bluetooth present' : 'NO Web Bluetooth in this browser'}, secure context: ${window.isSecureContext}`);
   try {
     await printer.connect({ showAll: $('showAllDevices').checked });
     plog('reading printer identity…');
@@ -80,11 +116,37 @@ $('btnConnect').addEventListener('click', async () => {
     plog(`status: ${JSON.stringify(info.status?.raw)} problems: ${info.status?.problems?.join(', ') || 'none'}`);
     toast('Printer connected');
   } catch (err) {
-    if (err && err.name === 'NotFoundError') plog('device chooser cancelled');
-    else { plog(`connect failed: ${err.message}`); toast(err.message, true); }
+    const { fatal, text } = explainConnectError(err);
+    plog(`connect failed [${err && err.name}] ${err && err.message ? err.message : '(no message)'}`);
+    if (fatal) { showPrinterError(text); toast('Could not connect — see Setup', true); }
+    else { plog(text); }
   } finally {
     btn.disabled = false;
     paintPrinterState();
+  }
+});
+
+$('btnCopyLog').addEventListener('click', async () => {
+  const text = [
+    `browser: ${navigator.userAgent}`,
+    `page: ${location.href}`,
+    `web bluetooth: ${!!navigator.bluetooth}   secure context: ${window.isSecureContext}`,
+    '',
+    ...logLines,
+  ].join('\n');
+  try {
+    await navigator.clipboard.writeText(text);
+    toast('Diagnostics copied');
+  } catch {
+    // Clipboard is blocked in some in-app browsers; fall back to selecting it.
+    const pre = $('printerLog');
+    pre.textContent = text;
+    const range = document.createRange();
+    range.selectNodeContents(pre);
+    const sel = getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    toast('Selected — long-press to copy');
   }
 });
 
@@ -93,9 +155,11 @@ $('btnDisconnect').addEventListener('click', () => printer.disconnect());
 if (!isSupported()) {
   const w = $('bleWarning');
   w.hidden = false;
-  w.innerHTML = /iPhone|iPad/.test(navigator.userAgent)
-    ? 'Safari on iPhone cannot use Bluetooth. Open this page in the free <b>Bluefy</b> app instead.'
-    : 'This browser has no Bluetooth support. Use Chrome on desktop, or Bluefy on iPhone.';
+  w.classList.add('banner--bad');
+  w.innerHTML = /iPhone|iPad|Mac/.test(navigator.platform) && /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent)
+    ? 'Safari cannot use Bluetooth at all. On iPhone, open this page in the free <b>Bluefy</b> app; on a Mac, use <b>Chrome</b>.'
+    : 'This browser has no Bluetooth support. Use <b>Chrome</b> on a computer, or <b>Bluefy</b> on iPhone. Firefox and Safari will not work.';
+  $('btnConnect').disabled = true;
 }
 
 // ── locations ─────────────────────────────────────────────────────────────
