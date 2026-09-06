@@ -15,9 +15,12 @@ no Bluetooth support). Turn the printer on, go to *Setup* → *Connect printer*.
 
 ## Run it on the iPhone
 
-The app has to be served over HTTPS and opened in the free
+**https://bbass07.github.io/price-tags/** — open it in the free
 [Bluefy](https://apps.apple.com/us/app/bluefy-web-ble-browser/id1492822055)
-browser. Safari cannot talk to Bluetooth devices at all.
+browser. Safari cannot talk to Bluetooth devices at all, so the link will load
+there but the printer will never connect.
+
+Pushing to `main` redeploys the site automatically.
 
 ## Check how the printer is reachable
 

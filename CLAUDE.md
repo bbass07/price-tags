@@ -85,10 +85,11 @@ Working and verified:
   was checked in the browser, not just assumed.
 - Label library, locations, queue with quantities, export/import.
 
+Live at **https://bbass07.github.io/price-tags/** (repo `bbass07/price-tags`,
+deployed from `web/` by `.github/workflows/pages.yml` on every push to `main`).
+
 Not done yet:
 - **A real print has never been sent.** Everything up to the Bluetooth write is
   verified; the printer's own reaction is not.
-- HTTPS hosting, without which the iPhone cannot load the app at all.
-- Service worker for offline use.
 - The 8-dot feed margin is taken from the reference driver; it may need
   adjusting once real labels come out and can be measured against the gap.
