@@ -126,7 +126,10 @@
 <!-- ───────────────────── label editor sheet ───────────────────── -->
 <dialog id="editor" class="sheet">
   <form method="dialog" id="editorForm">
-    <h2 id="editorTitle">New label</h2>
+    <div class="sheet__head">
+      <h2 id="editorTitle">New label</h2>
+      <button id="fClose" class="iconbtn" type="button" aria-label="Close without saving">&times;</button>
+    </div>
     <label class="field"><span>Item name</span>
       <input id="fName" class="input" required maxlength="80" autocomplete="off"></label>
     <label class="field"><span>Price</span>
@@ -142,7 +145,7 @@
     <div class="sheet__actions">
       <button id="fDelete" class="btn btn--danger" type="button" hidden>Delete</button>
       <span class="spacer"></span>
-      <button class="btn btn--ghost" value="cancel" type="submit">Cancel</button>
+      <button class="btn btn--ghost" value="cancel" type="submit" formnovalidate>Cancel</button>
       <button id="fSave" class="btn btn--primary" value="save" type="submit">Save</button>
     </div>
   </form>

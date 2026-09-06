@@ -316,6 +316,20 @@ for (const f of ['fName', 'fPrice', 'fNote']) $(f).addEventListener('input', pai
 
 $('newLabel').addEventListener('click', () => openEditor(null));
 
+// Leaving the sheet must always be possible, including with the form empty.
+// The Cancel button carries `formnovalidate` for the same reason: without it
+// the browser's "this field is required" check blocks the way out.
+$('fClose').addEventListener('click', () => $('editor').close('cancel'));
+$('editor').addEventListener('click', (e) => {
+  // Backdrop taps close the sheet, but the dialog's own padding also reports
+  // the dialog as the target — closing on that would throw away typed input
+  // from a slightly-off tap near the edge. Check the geometry instead.
+  if (e.target !== $('editor')) return;
+  const r = $('editor').getBoundingClientRect();
+  const outside = e.clientY < r.top || e.clientY > r.bottom || e.clientX < r.left || e.clientX > r.right;
+  if (outside) $('editor').close('cancel');
+});
+
 $('editorForm').addEventListener('submit', (e) => {
   if (e.submitter && e.submitter.value !== 'save') return;
   const name = $('fName').value.trim();
