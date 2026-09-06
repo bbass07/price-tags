@@ -42,12 +42,15 @@
 
 <div class="card">
   <h2>Test: can Bluefy be opened by link?</h2>
-  <p class="muted">Bluefy says it supports a custom URL scheme but does not publish which one.
-  Tap each of these <b>in Safari</b>. The one that offers to open Bluefy is the answer —
-  tell Claude which it was and the shortcut can skip the flash and go straight to the app.</p>
+  <p class="muted">Tap each of these <b>in Safari</b> and let it open Bluefy. Once
+  <code>bluefy://</code> is registered, iOS offers to open the app for <em>any</em> link
+  starting that way, so "it opened Bluefy" proves nothing by itself. What counts is where
+  Bluefy lands: each link points at a page that shows its own number.
+  <b>Only a scheme that puts a number on screen actually works.</b> If Bluefy just sits on
+  whatever page it had open before, that scheme opened the app and threw the address away.</p>
   <div id="list"></div>
-  <p class="muted">A tap that does nothing, or shows "Safari cannot open the page", means
-  that scheme is not it. That is expected for most of them.</p>
+  <p class="muted">Between each test, tap through to some other page in Bluefy first &mdash;
+  otherwise a page left over from the previous attempt can look like a success.</p>
 </div>
 
 <div class="card">
@@ -60,17 +63,20 @@
 </main>
 
 <script>
-  const target = 'bbass07.github.io/price-tags/';
+  // Each candidate lands on a page that names itself, so "Bluefy opened" and
+  // "Bluefy went where I told it" can be told apart.
+  const host = 'bbass07.github.io/price-tags/landed.html';
+  const url = (n) => `${host}?s=${n}`;
   const candidates = [
-    'bluefy://' + target,
-    'bluefys://' + target,
-    'bluefy://open?url=https://' + target,
-    'bluefy://x-callback-url/open?url=' + encodeURIComponent('https://' + target),
-    'bluefy-browser://' + target,
-    'pnnsoft-bluefy://' + target,
+    ['bluefy://' + url(1), 1],
+    ['bluefys://' + url(2), 2],
+    ['bluefy://open?url=' + encodeURIComponent('https://' + url(3)), 3],
+    ['bluefy://x-callback-url/open?url=' + encodeURIComponent('https://' + url(4)), 4],
+    ['bluefy-browser://' + url(5), 5],
+    ['pnnsoft-bluefy://' + url(6), 6],
   ];
   document.getElementById('list').innerHTML = candidates
-    .map((u) => `<a class="scheme" href="${u}"><span>→</span><code>${u}</code></a>`)
+    .map(([u, n]) => `<a class="scheme" href="${u}"><span>${n}</span><code>${u}</code></a>`)
     .join('');
 </script>
 </body>
