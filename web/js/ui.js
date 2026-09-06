@@ -79,6 +79,8 @@ function explainConnectError(err) {
   const name = err && err.name ? err.name : 'Error';
   const detail = (err && err.message ? String(err.message) : '').trim();
   switch (name) {
+    case 'BluetoothOffError':
+      return { fatal: true, text: detail };
     case 'NotFoundError':
       return detail.includes('chooser')
         ? { fatal: false, text: 'You closed the device list without picking anything.' }

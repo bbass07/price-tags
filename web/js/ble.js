@@ -45,6 +45,18 @@ export class PrinterLink extends EventTarget {
         'This browser has no Bluetooth support. On iPhone, open this page in the Bluefy app.'
       );
     }
+    // Catches the most common cause of a silent failure: the radio is simply
+    // switched off. Not every browser implements this, so a throw here is not
+    // itself a reason to stop.
+    try {
+      if ((await navigator.bluetooth.getAvailability()) === false) {
+        const e = new Error('Bluetooth is switched off on this device. Turn it on in Settings and try again.');
+        e.name = 'BluetoothOffError';
+        throw e;
+      }
+    } catch (e) {
+      if (e.name === 'BluetoothOffError') throw e;
+    }
     const options = showAll
       ? { acceptAllDevices: true, optionalServices: [SERVICE_UUID] }
       : {
