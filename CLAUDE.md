@@ -55,6 +55,11 @@ Key facts that bite:
 - Commands are acked by a notification echoing the command byte at **offset 7**.
 - Bulk image data over BLE is **not** acked (unlike Classic Bluetooth).
 - The raster is strictly **1 bit per pixel** — all shading is host-side dithering.
+- The raster must be **mirrored horizontally** before column-major packing: the
+  leftmost image dot goes to the highest printhead dot index. The reference
+  driver hides this inside its dither stage (`dither.rs`, `mx = width - 1 - x`),
+  so it is easy to drop when replacing dithering with a plain threshold. Getting
+  it wrong prints readable-but-backwards labels.
 - There is **no backfeed**: a fed label cannot be reprinted over.
 
 ## Layout

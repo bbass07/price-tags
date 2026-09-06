@@ -16,6 +16,13 @@ const MAX_DENSITY = 15;
  * Rotate a row-major MSB-first bitmap -90° into the printer's column-major
  * LSB-first layout, centred across the full printhead in one pass.
  *
+ * The head is also mirrored: a dot on the LEFT of the image must be placed at
+ * the HIGHEST dot index of the printhead line, or everything prints backwards.
+ * The reference driver does this inside its dither stage
+ * (`dither.rs::Ditherer::line`, `mx = width - 1 - x`), which is easy to miss
+ * because it looks like part of the halftoning rather than part of the
+ * geometry. It isn't — it applies whatever way the raster was produced.
+ *
  * Each output "column" is one printhead line, `bytesPerLine` bytes wide.
  * Returns { data, cols, bytesPerLine }.
  */
@@ -32,7 +39,7 @@ export function toPrintheadCanvas(bitmap, canvasWidthDots = PRINTHEAD_WIDTH_DOTS
     const rowBase = y * bytesPerRow;
     const colBase = y * bytesPerLine;
     for (let x = 0; x < width; x++) {
-      const dot = x + offset;
+      const dot = (width - 1 - x) + offset;
       if (dot < 0 || dot >= usableDots) continue;
       if (src[rowBase + (x >> 3)] & (0x80 >> (x & 7))) {
         out[colBase + (dot >> 3)] |= 1 << (dot & 7);
