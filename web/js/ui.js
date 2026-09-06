@@ -343,13 +343,19 @@ $('labelW').addEventListener('change', (e) => { store.updateSettings({ labelWidt
 $('labelH').addEventListener('change', (e) => { store.updateSettings({ labelHeightMm: Number(e.target.value) }); paintPreview(); });
 // ── fullscreen ────────────────────────────────────────────────────────────
 
+const NO_FULLSCREEN = 'This browser will not let a page go fullscreen \u2014 on iPhone none of them can, '
+  + 'because Apple\u2019s engine has no such feature and every iOS browser is built on it. '
+  + 'Use Bluefy\u2019s own fullscreen button after launching.';
+
 function paintFullscreenSupport(note) {
-  const supported = fullscreen.isSupported();
+  // `settings.fullscreenBroken` records a browser that claimed support and then
+  // did nothing, so we stop offering it on that device.
+  const supported = fullscreen.isSupported() && !store.settings.fullscreenBroken;
   $('autoFullscreen').disabled = !supported;
   $('btnFullscreen').disabled = !supported;
   $('fullscreenSupport').textContent = note || (supported
     ? 'Bluefy forgets its own fullscreen setting between launches, so the app asks for it instead.'
-    : 'This browser will not let a page go fullscreen. Use Bluefy\u2019s own fullscreen button each time.');
+    : NO_FULLSCREEN);
 }
 
 $('autoFullscreen').addEventListener('change', (e) => {
@@ -359,15 +365,23 @@ $('autoFullscreen').addEventListener('change', (e) => {
 $('btnFullscreen').addEventListener('click', async () => {
   try {
     await fullscreen.enter();
+    store.updateSettings({ fullscreenBroken: false });
     paintFullscreenSupport('Fullscreen on.');
   } catch (err) {
-    paintFullscreenSupport(`This browser refused: ${err.message || err.name}`);
+    plog(`fullscreen refused: ${err.message || err.name}`);
+    store.updateSettings({ fullscreenBroken: true });
+    paintFullscreenSupport(NO_FULLSCREEN);
   }
 });
 
 fullscreen.armOnFirstGesture(
-  () => store.settings.autoFullscreen !== false,
-  (ok, err) => { if (!ok) plog(`auto fullscreen failed: ${err && (err.message || err.name)}`); }
+  () => store.settings.autoFullscreen !== false && !store.settings.fullscreenBroken,
+  (ok, err) => {
+    if (ok) return;
+    plog(`auto fullscreen failed: ${err && (err.message || err.name)}`);
+    store.updateSettings({ fullscreenBroken: true });
+    paintFullscreenSupport(NO_FULLSCREEN);
+  }
 );
 
 $('printerNickname').addEventListener('input', (e) => {

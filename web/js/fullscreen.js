@@ -22,11 +22,20 @@ export function isActive() {
   return !!(document.fullscreenElement || document.webkitFullscreenElement);
 }
 
+/**
+ * Ask for fullscreen and confirm it actually happened.
+ *
+ * iOS shells are the reason for the second half: WebKit on iPhone exposes no
+ * element fullscreen at all, and a shell can expose the method while ignoring
+ * the call. A promise that resolves is not evidence, so check the result.
+ */
 export async function enter() {
   const node = el();
   const fn = request(node);
-  if (!fn) throw new Error('This browser has no fullscreen mode for web pages.');
+  if (!fn) throw new Error('this browser has no fullscreen mode for web pages');
   await fn.call(node);
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  if (!isActive()) throw new Error('the browser accepted the request and then ignored it');
 }
 
 /**
