@@ -580,6 +580,60 @@ $('btnPrint').addEventListener('click', async () => {
   }
 });
 
+// ── build check ───────────────────────────────────────────────────────────
+//
+// index.html and this file are separate downloads, so a browser cache can hand
+// back a new page with an old script beside it. That is not an old app, it is a
+// broken one — buttons wired to markup that is no longer there simply do
+// nothing. Both carry the same build string, so the mismatch is detectable:
+// when it happens, throw the offline copy away and reload once.
+
+const BUILD = '2026-09-11.3';
+
+function currentBuild() {
+  return document.querySelector('meta[name="app-build"]')?.content || '';
+}
+
+/** Delete every cache and service worker, then reload from the network. */
+async function reinstall() {
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.unregister()));
+    }
+    if (window.caches) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+    }
+  } catch { /* nothing here is worth blocking the reload */ }
+  // The query string is what actually defeats the browser's own HTTP cache.
+  const url = new URL(location.href);
+  url.searchParams.set('fresh', Date.now().toString(36));
+  location.replace(url.toString());
+}
+
+function checkBuild() {
+  // A missing stamp counts as a mismatch: it means an index.html from before
+  // builds were stamped is being served next to this script.
+  if (currentBuild() === BUILD) { sessionStorage.removeItem('buildFix'); return; }
+  // Reload once only. If the mismatch survives a clean reinstall it is a
+  // deploy problem, and looping would just hide it.
+  if (sessionStorage.getItem('buildFix')) {
+    toast('This app is half-updated. Close the tab and open it again.', true);
+    return;
+  }
+  sessionStorage.setItem('buildFix', '1');
+  reinstall();
+}
+
+$('btnReinstall').addEventListener('click', async () => {
+  const btn = $('btnReinstall');
+  btn.disabled = true;
+  btn.textContent = 'Reinstalling…';
+  sessionStorage.removeItem('buildFix');
+  await reinstall();
+});
+
 // ── boot ──────────────────────────────────────────────────────────────────
 
 function escapeHtml(s) {
@@ -593,6 +647,7 @@ function refreshLists() {
 }
 
 function boot() {
+  $('buildStamp').textContent = BUILD;
   $('printerNickname').value = store.settings.printerNickname || '';
   $('autoFullscreen').checked = store.settings.autoFullscreen !== false;
   paintFullscreenSupport();
@@ -605,6 +660,7 @@ function boot() {
 }
 
 boot();
+checkBuild();
 
 // Offline support. Harmless where the browser has no service workers.
 if ('serviceWorker' in navigator && location.protocol === 'https:') {

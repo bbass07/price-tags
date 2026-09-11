@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#111417">
 <title>Price Tags</title>
+<!-- Bumped on every deploy. ui.js carries the same string; if the two
+     disagree the browser has mixed an old file with a new one. -->
+<meta name="app-build" content="2026-09-11.3">
 <link rel="stylesheet" href="app.css">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
@@ -115,6 +118,14 @@
         <input id="importFile" type="file" accept="application/json,.json" hidden>
       </div>
     </div>
+
+    <div class="card">
+      <h2>App version</h2>
+      <p class="muted">Build <b id="buildStamp">—</b></p>
+      <button id="btnReinstall" class="btn btn--ghost" type="button">Reinstall the app</button>
+      <p class="muted">Throws away the offline copy and downloads the app again.
+        Your labels are not touched. Use it if the app looks wrong or stops responding.</p>
+    </div>
   </section>
 </main>
 
@@ -165,6 +176,9 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script type="module" src="js/ui.js"></script>
+<!-- The build is in the URL so a cached index.html can never be paired with
+     a different ui.js: a new page asks for a file name the old cache has
+     never seen. -->
+<script type="module" src="js/ui.js?b=2026-09-11.3"></script>
 </body>
 </html>
