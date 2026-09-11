@@ -14,14 +14,44 @@ function blank() {
     locations: [],
     activeLocationId: null,
     labels: [],
-    settings: { labelWidthMm: 40, labelHeightMm: 30, density: 6, printerNickname: "Jana's Tag Printer", autoFullscreen: true },
+    // Label size is not a setting — the stock is always 30 x 15 mm, so it
+    // lives as a constant in render.js. Older backups carry labelWidthMm /
+    // labelHeightMm; `cleanSettings()` drops them so a stale 40 x 30 can't come back.
+    settings: { density: 6, printerNickname: "Jana's Tag Printer", autoFullscreen: true },
   };
+}
+
+/** Merge saved settings over the defaults, dropping fields we no longer use. */
+function cleanSettings(saved = {}) {
+  const { labelWidthMm, labelHeightMm, ...rest } = saved;
+  return { ...blank().settings, ...rest };
+}
+
+/**
+ * Drop fields older versions wrote and this one no longer has.
+ *
+ * `note` was the label's optional second line; a tag is now always exactly
+ * booth / name / price, so the field is removed from the saved record rather
+ * than left behind as dead weight in every export.
+ *
+ * Returns true if anything was actually removed, so the caller can write the
+ * cleaned library back to disk instead of waiting for the next edit.
+ */
+function cleanLabels(labels = []) {
+  let changed = false;
+  for (const label of labels) {
+    if ('note' in label) { delete label.note; changed = true; }
+  }
+  return changed;
 }
 
 export class Store extends EventTarget {
   constructor() {
     super();
     this.data = this.load();
+    // Write the migration through immediately — a library that is only read,
+    // never edited, should still end up clean in the next export.
+    if (this.migrated) this.save();
   }
 
   load() {
@@ -29,7 +59,9 @@ export class Store extends EventTarget {
       const raw = localStorage.getItem(KEY);
       if (!raw) return blank();
       const parsed = JSON.parse(raw);
-      return { ...blank(), ...parsed, settings: { ...blank().settings, ...(parsed.settings || {}) } };
+      const data = { ...blank(), ...parsed, settings: cleanSettings(parsed.settings) };
+      this.migrated = cleanLabels(data.labels) || 'labelWidthMm' in (parsed.settings || {});
+      return data;
     } catch {
       return blank();
     }
@@ -84,8 +116,8 @@ export class Store extends EventTarget {
 
   get labels() { return this.data.labels; }
 
-  addLabel({ name, price, note = '' }) {
-    const label = { id: uid(), name: name.trim(), price: String(price).trim(), note: note.trim(), updatedAt: Date.now() };
+  addLabel({ name, price }) {
+    const label = { id: uid(), name: name.trim(), price: String(price).trim(), updatedAt: Date.now() };
     this.data.labels.unshift(label);
     this.save();
     return label;
@@ -103,12 +135,12 @@ export class Store extends EventTarget {
     this.save();
   }
 
-  /** Case-insensitive search across name, price and note. */
+  /** Case-insensitive search across name and price. */
   search(query) {
     const q = query.trim().toLowerCase();
     if (!q) return this.data.labels;
     return this.data.labels.filter((l) =>
-      `${l.name} ${l.price} ${l.note}`.toLowerCase().includes(q));
+      `${l.name} ${l.price}`.toLowerCase().includes(q));
   }
 
   // ---- settings ----------------------------------------------------------
@@ -135,11 +167,13 @@ export class Store extends EventTarget {
     const incoming = JSON.parse(text);
     if (!incoming || !Array.isArray(incoming.labels)) throw new Error('That file is not a label backup.');
     if (mode === 'replace') {
-      this.data = { ...blank(), ...incoming, settings: { ...blank().settings, ...(incoming.settings || {}) } };
+      this.data = { ...blank(), ...incoming, settings: cleanSettings(incoming.settings) };
+      cleanLabels(this.data.labels);
     } else {
       const haveLabels = new Set(this.data.labels.map((l) => l.id));
       const haveLocs = new Set(this.data.locations.map((l) => l.id));
       for (const l of incoming.labels) if (!haveLabels.has(l.id)) this.data.labels.push(l);
+      cleanLabels(this.data.labels);
       for (const l of incoming.locations || []) if (!haveLocs.has(l.id)) this.data.locations.push(l);
     }
     if (!this.data.activeLocationId) this.data.activeLocationId = this.data.locations[0]?.id || null;

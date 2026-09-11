@@ -67,6 +67,9 @@ h2 { font-size: 15px; margin: 0 0 8px; text-transform: uppercase; letter-spacing
 /* ── layout ──────────────────────────────────────────────── */
 main { padding: 16px; max-width: 720px; margin: 0 auto; }
 .view { display: flex; flex-direction: column; gap: 16px; }
+/* Fills the space between the header and the tab bar so the booth buttons can
+   split it between them rather than sitting in a stack at the top. */
+.view--fill { min-height: calc(100dvh - 190px - var(--safe-b)); }
 [hidden] { display: none !important; }
 
 .card {
@@ -121,16 +124,34 @@ main { padding: 16px; max-width: 720px; margin: 0 auto; }
 .check { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
 .searchrow { display: flex; gap: 8px; }
 
-/* ── location bar ────────────────────────────────────────── */
-.locbar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
-.locbar__btn {
-  flex: 0 0 auto; min-height: 44px; padding: 8px 16px; cursor: pointer;
-  border: 1px solid var(--line); border-radius: 999px;
-  background: var(--surface); color: var(--text); font-size: 14px; font-weight: 600;
+/* ── picking a booth ─────────────────────────────────────── */
+/* The first thing you do at a booth is say which booth you are at, so it gets
+   the whole screen: two targets you can hit without looking. */
+.lead { margin: 0; font-size: 17px; color: var(--muted); }
+
+.loccards { display: flex; flex-direction: column; gap: 14px; flex: 1; }
+.loccard {
+  flex: 1 1 0; min-height: 132px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+  gap: 6px; padding: 20px 24px; text-align: left;
+  border: 1px solid var(--line); border-radius: 18px;
+  background: var(--surface); color: var(--text);
 }
-.locbar__btn small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); }
-.locbar__btn.is-active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.locbar__btn.is-active small { color: inherit; opacity: .85; }
+.loccard__booth { font-size: clamp(30px, 11vw, 52px); font-weight: 700; line-height: 1; }
+.loccard__name { font-size: 17px; color: var(--muted); }
+.loccard:active { background: var(--accent); border-color: var(--accent); }
+.loccard:active .loccard__name { color: var(--accent-ink); }
+.loccard:active .loccard__booth { color: var(--accent-ink); }
+
+/* Which booth is being printed for, kept in sight above the product list. */
+.boothstrip {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  width: 100%; padding: 10px 14px; cursor: pointer; text-align: left;
+  border: 1px solid var(--line); border-radius: 12px;
+  background: var(--surface); color: var(--text);
+}
+.boothstrip b { font-size: 16px; }
+.boothstrip__change { font-size: 14px; color: var(--accent); flex: 0 0 auto; }
 
 /* ── lists ───────────────────────────────────────────────── */
 .list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
@@ -144,6 +165,9 @@ main { padding: 16px; max-width: 720px; margin: 0 auto; }
 .item.is-queued { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
 .item__main { flex: 1; min-width: 0; text-align: left; background: none; border: 0; color: inherit; font: inherit; cursor: pointer; padding: 4px 0; }
 .item__name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* On the print list the name may run to two lines rather than be cut short. */
+.item__main--stacked .item__name { white-space: normal; overflow-wrap: anywhere; }
+.item__main--stacked .item__price { font-size: 14px; color: var(--muted); font-weight: 600; }
 .item__sub { font-size: 13px; color: var(--muted); }
 .item__price { font-weight: 700; font-variant-numeric: tabular-nums; }
 
@@ -193,13 +217,42 @@ main { padding: 16px; max-width: 720px; margin: 0 auto; }
   background: transparent; color: var(--muted); font-size: 24px; line-height: 1;
 }
 
-.preview { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.preview canvas {
-  width: 40mm; height: 30mm; max-width: 100%;
-  background: #fff; border: 1px solid var(--line); border-radius: 4px;
-  image-rendering: crisp-edges;
+/* ── the label editor: an actual-shaped tag you type into ──── */
+/* Proportions and font sizes are set from render.js's layout, so this card is
+   a true picture of the print rather than a lookalike. Only the paper is CSS. */
+.tag {
+  position: relative;
+  width: 100%; max-width: 360px; margin: 4px auto 0;
+  aspect-ratio: 240 / 120;              /* 30 x 15 mm at 8 dots/mm */
+  background: #fff; border-radius: 5px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .45);
+  overflow: hidden;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #000;
 }
-.preview__cap { font-size: 12px; color: var(--muted); }
+
+/* The black booth strip. Read-only — the booth comes from the location you
+   pick on the Print screen, which is the whole point of the app. */
+.tag__booth {
+  display: block; width: 100%; text-align: center;
+  font-weight: 700; line-height: 1;
+  white-space: nowrap; overflow: hidden; user-select: none;
+}
+
+.tag__slot { position: absolute; display: flex; align-items: center; justify-content: center; }
+
+.tag__input {
+  width: 100%; padding: 0; margin: 0; border: 0; outline: 0;
+  background: transparent; color: inherit; font: inherit; text-align: center;
+  border-radius: 3px; overflow: hidden;
+}
+textarea.tag__input { resize: none; display: block; }
+.tag__input::placeholder { color: #b8b8b8; }
+/* Focus has to read on white paper without moving anything by a pixel. */
+.tag__input:focus { background: rgba(74, 124, 255, .14); }
+
+.tag__cap { margin: 8px 0 0; text-align: center; font-size: 12px; color: var(--muted); }
+.tag__cap b { color: var(--text); font-weight: 600; }
 
 .diag pre {
   max-height: 220px; overflow: auto; margin: 8px 0 0; padding: 10px;

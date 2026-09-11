@@ -1,14 +1,20 @@
 // render.js — draw a price tag onto a canvas at printer resolution, then
 // reduce it to the 1-bit-per-pixel raster the printhead wants.
 //
-// The T50M Pro is 8 dots/mm, so a 40 x 30 mm label is exactly 320 x 240 dots.
+// The T50M Pro is 8 dots/mm, so the 30 x 15 mm label is exactly 240 x 120 dots.
+//
+// This is the only stock the owner uses, so the size is a constant rather than
+// a setting — one less thing to get wrong at a booth.
 
 export const DOTS_PER_MM = 8;
+
+export const LABEL_WIDTH_MM = 30;
+export const LABEL_HEIGHT_MM = 15;
 
 /** Feed-direction columns the firmware advances blank; keep artwork out of them. */
 export const FEED_MARGIN_DOTS = 8;
 
-export function labelDots(widthMm, heightMm) {
+export function labelDots(widthMm = LABEL_WIDTH_MM, heightMm = LABEL_HEIGHT_MM) {
   return { width: Math.round(widthMm * DOTS_PER_MM), height: Math.round(heightMm * DOTS_PER_MM) };
 }
 
@@ -79,20 +85,21 @@ function drawLines(ctx, lines, size, lineHeight, box, align = 'center') {
 }
 
 /**
- * Paint one price tag. `label` is {name, price, note}; `booth` is the string
- * that goes in the banner at the top and is the only thing that differs
- * between locations.
+ * Where the three lines of a tag sit, in printer dots.
+ *
+ * Every tag is booth / item name / price, in that order, always — three plain
+ * black lines of equal height, so the tag never changes shape on you. The
+ * booth line keeps its strip of height whether or not there is a booth to put
+ * in it.
+ *
+ * The geometry is worked out once here and used twice: `renderLabel` paints
+ * from it, and the editor sizes its on-screen form from it so what you type is
+ * laid out exactly where it will print.
+ *
+ * `ctx` is any 2D context; it is only measured against, never drawn to.
  */
-export function renderLabel(canvas, { booth, name, price, note }, opts = {}) {
-  const widthMm = opts.widthMm ?? 40;
-  const heightMm = opts.heightMm ?? 30;
-  const { width, height } = labelDots(widthMm, heightMm);
-  canvas.width = width;
-  canvas.height = height;
-
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0, 0, width, height);
+export function labelLayout(ctx, { booth = '', name = '', price = '' } = {}, opts = {}) {
+  const { width, height } = labelDots();
 
   // The printer trims `insetDots` columns off each end of the feed direction
   // and feeds them blank instead, so nothing may be drawn there.
@@ -101,39 +108,74 @@ export function renderLabel(canvas, { booth, name, price, note }, opts = {}) {
   const bottom = height - inset;
   const usableH = bottom - top;
 
-  const pad = Math.round(width * 0.035);
-  const bannerH = Math.round(usableH * 0.24);
+  // On a 15 mm tall label there is barely 13 mm of printable feed once the
+  // blank margins are taken out, so the padding is tight and every line is
+  // measured off `usableH` rather than the full height.
+  const pad = Math.max(4, Math.round(width * 0.03));
+  const gap = Math.round(pad / 2);
 
-  // Booth banner — inverted so it reads from across the aisle.
-  if (booth) {
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, top, width, bannerH);
-    ctx.fillStyle = '#fff';
-    const box = { x: pad, y: top, w: width - pad * 2, h: bannerH };
-    const fit = fitText(ctx, `BOOTH ${booth}`, box, { weight: '700', max: bannerH - 6, min: 12, maxLines: 1 });
-    drawLines(ctx, fit.lines, fit.size, fit.lineHeight, box);
-  }
+  // Three identical rows. Short text fills its row, so in practice all three
+  // lines come out the same size; only a long name shrinks to fit its width.
+  const rowH = Math.floor((usableH - gap * 2) / 3);
+  const rowW = width - pad * 2;
+  const row = (i) => ({ x: pad, y: top + i * (rowH + gap), w: rowW, h: rowH });
+
+  const boothBlock = {
+    box: row(0),
+    weight: '700',
+    text: booth ? `BOOTH ${booth}` : '',
+  };
+  boothBlock.fit = fitText(ctx, boothBlock.text, boothBlock.box, {
+    weight: '700', max: rowH, min: 9, maxLines: 1,
+  });
+
+  const nameBlock = {
+    box: row(1),
+    weight: '700',
+    text: String(name),
+  };
+  nameBlock.fit = fitText(ctx, nameBlock.text, nameBlock.box, {
+    weight: '700', max: rowH, min: 8, maxLines: 1,
+  });
+
+  const priceBlock = {
+    box: row(2),
+    weight: '700',
+    text: String(price),
+  };
+  priceBlock.fit = fitText(ctx, priceBlock.text, priceBlock.box, {
+    weight: '700', max: rowH, min: 10, maxLines: 1,
+  });
+
+  return {
+    width, height, fontStack: FONT_STACK,
+    booth: boothBlock, name: nameBlock, price: priceBlock,
+  };
+}
+
+/**
+ * Paint one price tag. `label` is {name, price}; `booth` is the string that
+ * goes on the top line and is the only thing that differs between locations.
+ */
+export function renderLabel(canvas, { booth, name, price }, opts = {}) {
+  const { width, height } = labelDots();
+  canvas.width = width;
+  canvas.height = height;
+
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, width, height);
+
+  const L = labelLayout(ctx, { booth, name, price }, opts);
 
   ctx.fillStyle = '#000';
-
-  // Price gets the most ink — it is what a customer looks for.
-  const priceH = Math.round(usableH * 0.34);
-  const priceBox = { x: pad, y: bottom - pad - priceH, w: width - pad * 2, h: priceH };
-  if (price) {
-    const fit = fitText(ctx, price, priceBox, { weight: '700', max: priceH, min: 14, maxLines: 1 });
-    drawLines(ctx, fit.lines, fit.size, fit.lineHeight, priceBox);
+  for (const block of [L.booth, L.name, L.price]) {
+    if (!block.text || block.box.h <= 8) continue;
+    ctx.font = `${block.weight} ${block.fit.size}px ${FONT_STACK}`;
+    drawLines(ctx, block.fit.lines, block.fit.size, block.fit.lineHeight, block.box);
   }
 
-  // Item name fills whatever is left between the banner and the price.
-  const nameTop = top + (booth ? bannerH : 0) + pad;
-  const nameBox = { x: pad, y: nameTop, w: width - pad * 2, h: priceBox.y - nameTop - Math.round(pad / 2) };
-  if (name && nameBox.h > 12) {
-    const text = note ? `${name}\n${note}` : name;
-    const fit = fitText(ctx, text, nameBox, { weight: '600', max: Math.round(nameBox.h), min: 10, maxLines: 3 });
-    drawLines(ctx, fit.lines, fit.size, fit.lineHeight, nameBox);
-  }
-
-  return { width, height };
+  return L;
 }
 
 /**

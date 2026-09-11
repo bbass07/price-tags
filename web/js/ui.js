@@ -2,7 +2,7 @@
 
 import { Store, formatPrice } from './store.js';
 import { Printer } from './printer.js';
-import { renderLabel, canvasToBitmap } from './render.js';
+import { labelLayout, labelDots, renderLabel, canvasToBitmap } from './render.js';
 import { isSupported } from './ble.js';
 import * as fullscreen from './fullscreen.js';
 import { printLabels } from './job.js';
@@ -24,17 +24,29 @@ function toast(msg, bad = false) {
   toast._t = setTimeout(() => { el.hidden = true; }, bad ? 5000 : 2600);
 }
 
+// Printing is two steps — pick the booth, then pick the labels — so `pick` is
+// a screen of its own that still belongs to the Print tab.
+const VIEW_TAB = { print: 'print', pick: 'print', labels: 'labels', setup: 'setup' };
+let view = 'print';
+
 function showView(name) {
+  view = name;
   for (const v of document.querySelectorAll('.view')) v.hidden = v.id !== `view-${name}`;
-  for (const t of document.querySelectorAll('.tab')) t.classList.toggle('is-active', t.dataset.view === name);
-  $('viewTitle').textContent = { print: 'Print', labels: 'Labels', setup: 'Setup' }[name];
-  $('printBar').hidden = name !== 'print' || queue.size === 0;
+  for (const t of document.querySelectorAll('.tab')) t.classList.toggle('is-active', t.dataset.view === VIEW_TAB[name]);
+  $('viewTitle').textContent = name === 'pick'
+    ? (store.activeLocation?.name || 'Print')
+    : { print: 'Print', labels: 'Labels', setup: 'Setup' }[name];
+  $('btnBack').hidden = name !== 'pick';
+  paintQueueBar();
 }
 
 for (const tab of document.querySelectorAll('.tab')) {
+  // Tapping Print always returns to the booth menu, which is the way back out
+  // of a half-built queue without hunting for a back arrow.
   tab.addEventListener('click', () => showView(tab.dataset.view));
 }
 $('printerChip').addEventListener('click', () => showView('setup'));
+$('btnBack').addEventListener('click', () => showView('print'));
 
 // ── printer ───────────────────────────────────────────────────────────────
 
@@ -175,18 +187,22 @@ if (!isSupported()) {
 // ── locations ─────────────────────────────────────────────────────────────
 
 function paintLocations() {
-  const bar = $('locBar');
-  bar.innerHTML = '';
-  if (store.locations.length === 0) {
-    bar.innerHTML = '<p class="muted">Add a location on the Setup tab to set your booth number.</p>';
-  }
+  const cards = $('locCards');
+  cards.innerHTML = '';
+  // With nothing to choose between, the question and its empty grid would just
+  // strand the explanation at the bottom of a tall screen.
+  const empty = store.locations.length === 0;
+  cards.hidden = empty;
+  $('locLead').hidden = empty;
+  $('locEmpty').hidden = !empty;
   for (const loc of store.locations) {
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'locbar__btn' + (store.activeLocation?.id === loc.id ? ' is-active' : '');
-    b.innerHTML = `${escapeHtml(loc.name)}<small>Booth ${escapeHtml(loc.booth)}</small>`;
-    b.addEventListener('click', () => { store.setActiveLocation(loc.id); paintLocations(); paintQueueBar(); });
-    bar.appendChild(b);
+    b.className = 'loccard';
+    b.innerHTML = `<span class="loccard__booth">Booth ${escapeHtml(loc.booth)}</span>` +
+      `<span class="loccard__name">${escapeHtml(loc.name)}</span>`;
+    b.addEventListener('click', () => openLocation(loc.id));
+    cards.appendChild(b);
   }
 
   const list = $('locList');
@@ -218,6 +234,24 @@ $('addLoc').addEventListener('click', () => {
   paintLocations();
 });
 
+/**
+ * Step into the product list for one location.
+ *
+ * The queue is a count of labels for a booth, so switching booths starts a new
+ * one — carrying quantities across would quietly print the wrong booth number.
+ */
+function openLocation(id) {
+  if (store.activeLocation?.id !== id && queue.size) queue.clear();
+  store.setActiveLocation(id);
+  const loc = store.activeLocation;
+  $('boothStripName').textContent = `Printing for Booth ${loc.booth}`;
+  $('printSearch').value = '';
+  paintPrintList();
+  showView('pick');
+}
+
+$('boothStrip').addEventListener('click', () => showView('print'));
+
 // ── label library ─────────────────────────────────────────────────────────
 
 function labelRow(label, { withStepper }) {
@@ -228,14 +262,22 @@ function labelRow(label, { withStepper }) {
   const main = document.createElement('button');
   main.type = 'button';
   main.className = 'item__main';
-  main.innerHTML = `<div class="item__name">${escapeHtml(label.name)}</div>` +
-    (label.note ? `<div class="item__sub">${escapeHtml(label.note)}</div>` : '');
+  main.innerHTML = `<div class="item__name">${escapeHtml(label.name)}</div>`;
   li.appendChild(main);
 
   const price = document.createElement('div');
   price.className = 'item__price';
   price.textContent = formatPrice(label.price);
-  li.appendChild(price);
+
+  if (withStepper) {
+    // The stepper eats the width a price column would need, and at a booth the
+    // name is what you are hunting for — so the price tucks under it and the
+    // name gets the whole row.
+    main.classList.add('item__main--stacked');
+    main.appendChild(price);
+  } else {
+    li.appendChild(price);
+  }
 
   if (withStepper) {
     main.addEventListener('click', () => bump(label.id, +1));
@@ -291,28 +333,93 @@ function openEditor(id) {
   const label = id ? store.labels.find((l) => l.id === id) : null;
   $('editorTitle').textContent = label ? 'Edit label' : 'New label';
   $('fName').value = label?.name || '';
-  $('fPrice').value = label?.price || '';
-  $('fNote').value = label?.note || '';
+  // Show the tidied price, because the tag has to show what prints — an older
+  // label saved as "12.50" prints as "$12.50".
+  $('fPrice').value = formatPrice(label?.price || '');
   $('fDelete').hidden = !label;
-  paintPreview();
+  layoutTag();
   $('editor').showModal();
+  layoutTag();                 // widths are only real once the sheet is shown
   if (!label) setTimeout(() => $('fName').focus(), 50);
 }
 
-function paintPreview() {
-  const { labelWidthMm, labelHeightMm } = store.settings;
-  const canvas = $('previewCanvas');
-  canvas.style.width = `${labelWidthMm}mm`;
-  canvas.style.height = `${labelHeightMm}mm`;
-  renderLabel(canvas, {
-    booth: store.activeLocation?.booth || '',
-    name: $('fName').value || 'Item name',
-    price: formatPrice($('fPrice').value) || '$0.00',
-    note: $('fNote').value,
-  }, { widthMm: labelWidthMm, heightMm: labelHeightMm });
+// ── the tag-shaped editor ─────────────────────────────────────────────────
+//
+// The three boxes are placed and sized from render.js's own layout, scaled up
+// by however many screen pixels one printer dot is worth. That way the form is
+// not a lookalike of the print — it is the same geometry, so a name that has to
+// shrink to fit on paper shrinks here too, before the label is ever committed.
+
+const measure = document.createElement('canvas').getContext('2d');
+const DOTS = labelDots();
+
+/** Put `el` over `box` (in dots) and give it `size`-dot text. */
+function placeBlock(el, box, size, lineHeight, dot) {
+  el.style.left = `${(box.x / DOTS.width) * 100}%`;
+  el.style.top = `${(box.y / DOTS.height) * 100}%`;
+  el.style.width = `${(box.w / DOTS.width) * 100}%`;
+  el.style.height = `${(box.h / DOTS.height) * 100}%`;
+  el.style.fontSize = `${size * dot}px`;
+  if (lineHeight) el.style.lineHeight = `${lineHeight * dot}px`;
 }
 
-for (const f of ['fName', 'fPrice', 'fNote']) $(f).addEventListener('input', paintPreview);
+function layoutTag() {
+  const tag = $('tag');
+  const dot = tag.clientWidth / DOTS.width;
+  if (!dot) return;                      // sheet not laid out yet
+
+  const booth = store.activeLocation?.booth || '';
+  const nameText = $('fName').value || $('fName').placeholder;
+  const priceText = formatPrice($('fPrice').value) || $('fPrice').placeholder;
+  const L = labelLayout(measure, { booth, name: nameText, price: priceText });
+
+  const boothSlot = $('tagBoothSlot');
+  boothSlot.hidden = !booth;
+  $('tagBooth').textContent = L.booth.text;
+  placeBlock(boothSlot, L.booth.box, L.booth.fit.size, L.booth.fit.lineHeight, dot);
+
+  const nameSlot = $('tagNameSlot');
+  placeBlock(nameSlot, L.name.box, L.name.fit.size, L.name.fit.lineHeight, dot);
+  $('fName').style.fontWeight = L.name.weight;
+  // The textarea is only as tall as the lines it holds, so the flex slot can
+  // centre it the way `drawLines` centres the block on paper. The spare pixel
+  // is for the browser's own rounding — without it descenders get clipped.
+  $('fName').style.height = `${Math.ceil(L.name.fit.lines.length * L.name.fit.lineHeight * dot) + 2}px`;
+
+  const priceSlot = $('tagPriceSlot');
+  placeBlock(priceSlot, L.price.box, L.price.fit.size, L.price.fit.lineHeight, dot);
+  $('fPrice').style.fontWeight = L.price.weight;
+}
+
+for (const f of ['fName', 'fPrice']) $(f).addEventListener('input', layoutTag);
+
+// Enter in the name box means "done", not a second line — the printer only
+// ever gets one name, wrapped to fit.
+$('fName').addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  $('fPrice').focus();
+});
+
+// The price is tidied to "$12.50" as soon as you leave it, so the tag shows
+// what will actually print rather than what was typed.
+$('fPrice').addEventListener('blur', () => {
+  const tidy = formatPrice($('fPrice').value);
+  if (tidy && tidy !== $('fPrice').value) $('fPrice').value = tidy;
+  layoutTag();
+});
+
+new ResizeObserver(layoutTag).observe($('tag'));
+
+// The tag is mostly paper, and paper is a big target. Tapping any blank part
+// of it puts the cursor in whichever field is nearest, rather than nothing.
+$('tag').addEventListener('mousedown', (e) => {
+  if (e.target.closest('.tag__input')) return;
+  e.preventDefault();
+  const r = $('tag').getBoundingClientRect();
+  const priceTop = $('tagPriceSlot').getBoundingClientRect().top;
+  $(e.clientY >= priceTop ? 'fPrice' : 'fName').focus();
+});
 
 $('newLabel').addEventListener('click', () => openEditor(null));
 
@@ -334,7 +441,7 @@ $('editorForm').addEventListener('submit', (e) => {
   if (e.submitter && e.submitter.value !== 'save') return;
   const name = $('fName').value.trim();
   if (!name) { e.preventDefault(); return toast('Give the label a name', true); }
-  const patch = { name, price: $('fPrice').value.trim(), note: $('fNote').value.trim() };
+  const patch = { name, price: $('fPrice').value.trim() };
   if (editingId) store.updateLabel(editingId, patch); else store.addLabel(patch);
   refreshLists();
   toast(editingId ? 'Label updated' : 'Label saved');
@@ -353,8 +460,6 @@ $('fDelete').addEventListener('click', () => {
 
 // ── settings & backup ─────────────────────────────────────────────────────
 
-$('labelW').addEventListener('change', (e) => { store.updateSettings({ labelWidthMm: Number(e.target.value) }); paintPreview(); });
-$('labelH').addEventListener('change', (e) => { store.updateSettings({ labelHeightMm: Number(e.target.value) }); paintPreview(); });
 // ── fullscreen ────────────────────────────────────────────────────────────
 
 const NO_FULLSCREEN = 'This browser will not let a page go fullscreen \u2014 on iPhone none of them can, '
@@ -438,7 +543,7 @@ function paintQueueBar() {
   const total = [...queue.values()].reduce((a, b) => a + b, 0);
   $('queueCount').textContent = String(total);
   $('queueLoc').textContent = store.activeLocation ? `Booth ${store.activeLocation.booth}` : 'no location';
-  $('printBar').hidden = total === 0 || $('view-print').hidden;
+  $('printBar').hidden = total === 0 || view !== 'pick';
 }
 
 $('btnPrint').addEventListener('click', async () => {
@@ -488,8 +593,6 @@ function refreshLists() {
 }
 
 function boot() {
-  $('labelW').value = store.settings.labelWidthMm;
-  $('labelH').value = store.settings.labelHeightMm;
   $('printerNickname').value = store.settings.printerNickname || '';
   $('autoFullscreen').checked = store.settings.autoFullscreen !== false;
   paintFullscreenSupport();

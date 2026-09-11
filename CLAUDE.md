@@ -2,7 +2,7 @@
 ## Summary
 _The project's one-paragraph description. Agents: keep this current — Project Hub reads it._
 
-A phone-first web app for printing price tag labels on a Katasymbol/Supvan T50M Pro thermal printer. It stores a reusable library of item labels (name + price) and a list of booth locations, then swaps the booth number at the top of each label at print time — so the same label is kept once and printed for either booth. Talks to the printer directly over Bluetooth LE from the browser, with no native app to re-sign.
+A phone-first web app for printing price tag labels on a Katasymbol/Supvan T50M Pro thermal printer, on fixed 30 x 15 mm stock. It keeps a library of item labels (name + price) and a list of booth locations, and swaps the booth number at the top of each label at print time, so one saved label prints for either booth. It reaches the printer over Bluetooth LE straight from the browser.
 <!-- /PROJECT-HUB:SUMMARY -->
 
 ## Why this is a web app, not a native iOS app
@@ -22,7 +22,9 @@ first, then confirm on the phone.
 ## The printer
 
 Katasymbol / Supvan **T50M Pro**. 203 dpi, 8 dots/mm, 48 mm (384 dot) printhead.
-Labels in use: **40 x 30 mm**.
+Labels in use: **30 x 15 mm** (240 x 120 dots) — the only size, hard-coded in
+`web/js/render.js` as `LABEL_WIDTH_MM` / `LABEL_HEIGHT_MM`. There is deliberately
+no setting for it.
 
 Verified on this hardware with `tools/ble-probe` (2026-09-06) — the unit
 `T0205C2605108458` exposes a BLE GATT service that Web Bluetooth can reach:
@@ -83,12 +85,23 @@ reference/    cloned protocol documentation (not our code)
 
 Working and verified:
 - BLE discovery, connect, status polling, printer identity.
-- Label rendering at 320 x 240 dots, booth banner + item + price, auto-fitting text.
+- Label rendering at 240 x 120 dots: booth / item / price as three plain black
+  lines of equal height, auto-fitting text. Every label has exactly those three
+  lines — no inverted banner, no second line, no per-label layout. `store.js` strips the old `note` field from saved
+  records and from imported backups on load, so nothing carries it forward.
+- The editor *is* the label: `render.js` exports `labelLayout()`, and `ui.js`
+  places the two inputs over a tag-shaped card using that same geometry scaled
+  up. So the form is not a lookalike — a name that has to shrink to fit on
+  paper shrinks on screen first. Change the layout in `labelLayout()` only.
 - Full raster pipeline — column-major packing, 4096-byte print buffers with the
   firmware's odd 256-stride checksum, LZMA1 at 8 KB dictionary, 512-byte
   transfer frames. Byte-for-byte agreement with the reference driver's headers
   was checked in the browser, not just assumed.
 - Label library, locations, queue with quantities, export/import.
+- Printing is two screens: the Print tab is a menu of full-size booth buttons
+  (`view-print`), and picking one opens the product list with quantity steppers
+  for that booth (`view-pick`). Switching booths clears the queue on purpose —
+  quantities carried across would print the wrong booth number.
 
 Live at **https://bbass07.github.io/price-tags/** (repo `bbass07/price-tags`,
 deployed from `web/` by `.github/workflows/pages.yml` on every push to `main`).

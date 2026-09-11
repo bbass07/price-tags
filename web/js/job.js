@@ -34,8 +34,7 @@ export async function rasterise(label, { booth, settings }) {
     booth,
     name: label.name,
     price: label.priceText,
-    note: label.note,
-  }, { widthMm: settings.labelWidthMm, heightMm: settings.labelHeightMm });
+  });
 
   const bitmap = canvasToBitmap(canvas);
   const head = toPrintheadCanvas(bitmap);
@@ -95,7 +94,7 @@ export async function printLabels(printer, jobs, { booth, settings, onProgress, 
   for (const { label, qty } of jobs) {
     log(`rasterising "${label.name}"`);
     const { compressed, speed } = await rasterise(
-      { name: label.name, priceText: label.priceDisplay ?? label.price, note: label.note },
+      { name: label.name, priceText: label.priceDisplay ?? label.price },
       { booth, settings }
     );
     for (let copy = 0; copy < qty; copy++) {

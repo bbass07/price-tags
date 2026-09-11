@@ -17,6 +17,7 @@
 <body>
 
 <header class="topbar">
+  <button id="btnBack" class="iconbtn" type="button" aria-label="Back to locations" hidden>&lsaquo;</button>
   <h1 id="viewTitle">Print</h1>
   <button id="printerChip" class="chip chip--bad" type="button">
     <span class="dot"></span><span id="printerChipText">No printer</span>
@@ -24,9 +25,19 @@
 </header>
 
 <main>
-  <!-- ───────────────────────── Print ───────────────────────── -->
-  <section id="view-print" class="view">
-    <div class="locbar" id="locBar"></div>
+  <!-- ──────────── Print, step 1: which booth? ──────────────── -->
+  <section id="view-print" class="view view--fill">
+    <p class="lead" id="locLead">Where are you printing?</p>
+    <div class="loccards" id="locCards"></div>
+    <p id="locEmpty" class="empty" hidden>No booths set up yet.<br>Add them on the <b>Setup</b> tab and they will appear here.</p>
+  </section>
+
+  <!-- ──────────── Print, step 2: how many of what? ─────────── -->
+  <section id="view-pick" class="view" hidden>
+    <button id="boothStrip" class="boothstrip" type="button">
+      <b id="boothStripName"></b>
+      <span class="boothstrip__change">Change</span>
+    </button>
 
     <div class="searchrow">
       <input id="printSearch" class="input" type="search" placeholder="Search labels" autocomplete="off">
@@ -88,13 +99,9 @@
     </div>
 
     <div class="card">
-      <h2>Label size</h2>
-      <div class="row">
-        <label class="field"><span>Width (mm)</span><input id="labelW" class="input input--short" type="number" min="20" max="50" step="1"></label>
-        <label class="field"><span>Height (mm)</span><input id="labelH" class="input input--short" type="number" min="10" max="120" step="1"></label>
-      </div>
-      <p class="muted">The printer's head is 48 mm wide, so 50 mm is the widest roll it takes.</p>
-      <label class="field"><span>Darkness — <b id="densityValue">6</b></span>
+      <h2>Printing</h2>
+      <p class="muted">Labels are 30 &times; 15 mm &mdash; the only size this app prints.</p>
+      <label class="field"><span>Darkness &mdash; <b id="densityValue">6</b></span>
         <input id="density" type="range" min="1" max="15" step="1"></label>
       <p class="muted">Turn it up if the print is faint, down if it smudges or bleeds.</p>
     </div>
@@ -130,17 +137,22 @@
       <h2 id="editorTitle">New label</h2>
       <button id="fClose" class="iconbtn" type="button" aria-label="Close without saving">&times;</button>
     </div>
-    <label class="field"><span>Item name</span>
-      <input id="fName" class="input" required maxlength="80" autocomplete="off"></label>
-    <label class="field"><span>Price</span>
-      <input id="fPrice" class="input" inputmode="decimal" maxlength="24" autocomplete="off" placeholder="12.50 or 3 for $10"></label>
-    <label class="field"><span>Second line <em>(optional)</em></span>
-      <input id="fNote" class="input" maxlength="60" autocomplete="off" placeholder="e.g. Vintage · 1970s"></label>
-
-    <div class="preview">
-      <canvas id="previewCanvas"></canvas>
-      <span class="preview__cap">Actual size preview</span>
+    <!-- The editor is the label. Every tag has the same three blocks, so you
+         type straight into them at the size and position they will print. -->
+    <div class="tag" id="tag">
+      <div class="tag__slot" id="tagBoothSlot"><span id="tagBooth" class="tag__booth"></span></div>
+      <div class="tag__slot" id="tagNameSlot">
+        <textarea id="fName" class="tag__input" rows="1" required maxlength="80"
+                  autocomplete="off" autocapitalize="words" spellcheck="false"
+                  aria-label="Item name" placeholder="Item name"></textarea>
+      </div>
+      <div class="tag__slot" id="tagPriceSlot">
+        <input id="fPrice" class="tag__input" inputmode="decimal" maxlength="24"
+               autocomplete="off" aria-label="Price" placeholder="$0.00">
+      </div>
     </div>
+    <p class="tag__cap">This is the real 30 &times; 15 mm label. The booth number
+      comes from the location you pick on the Print screen, so it is not typed here.</p>
 
     <div class="sheet__actions">
       <button id="fDelete" class="btn btn--danger" type="button" hidden>Delete</button>
