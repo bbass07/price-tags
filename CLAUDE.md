@@ -146,9 +146,17 @@ the instructions, a copy button, and a retest harness in case Bluefy changes it.
 - Bulk entry / editing of a large library — adding labels one at a time is fine
   for a handful, tedious for hundreds. This is the owner's most likely next ask.
 - No barcode support; labels are text only.
-- Untried: **BLE Link**, a second free Web BLE browser on the App Store. If its
-  fullscreen persists across launches it replaces Bluefy outright, and the Home
-  Screen shortcut would need its URL scheme instead.
+- **BLE Link** (free, App Store id6468414672, iOS 16.4+) is being tried as a
+  Bluefy replacement — Bluefy keeps every past session as a tab and the
+  `open?url=` shortcut always opens another, so they pile up. `home-screen.html`
+  carries the install steps and a scheme tester (numbers 11–16); BLE Link
+  publishes no URL scheme, so the winner has to be found by tapping.
+- The app is served from GitHub Pages with `max-age=600`, so a phone can pair a
+  new index.html with a ten-minute-old ui.js and simply stop responding. Guards:
+  the service worker revalidates every fetch, index.html requests
+  `js/ui.js?b=<build>`, and a page/script build mismatch reinstalls once. Bump
+  the `BUILD` constant in `ui.js` **and** the `app-build` meta in `index.html`
+  together on every deploy, plus `CACHE` in `sw.js`.
 
 ### Working on this project
 

@@ -51,8 +51,25 @@
   Shortcuts on the way through &mdash; that is unavoidable, and it is the last visible seam.</p>
 </div>
 
+<div class="card">
+  <h2>Trying BLE Link instead</h2>
+  <p class="muted">Bluefy keeps every past session as a tab and the shortcut always opens a
+  new one, so the old ones pile up behind it. <b>BLE Link</b> is the other free Web Bluetooth
+  browser on the App Store &mdash; worth testing whether it behaves better.</p>
+
+  <p><b>1.</b> Install <a href="https://apps.apple.com/us/app/ble-link-web-ble-browser/id6468414672">BLE
+  Link &mdash; Web BLE Browser</a> (free, needs iOS 16.4 or newer).</p>
+  <p><b>2.</b> Open it and type <code>bbass07.github.io/price-tags/</code> in its address bar.</p>
+  <p><b>3.</b> Connect to the printer and print one tag. If that works, BLE Link can replace
+  Bluefy outright.</p>
+  <p><b>4.</b> Then tap the numbered links below to find its shortcut address. Only a link
+  that lands on a page showing <i>its own number</i> actually carries the address &mdash;
+  that is the one the Home Screen shortcut needs.</p>
+  <div id="listBle"></div>
+</div>
+
 <details class="card">
-  <summary class="muted">If it ever stops working &mdash; retest the schemes</summary>
+  <summary class="muted">If it ever stops working &mdash; retest the Bluefy schemes</summary>
   <p class="muted">Bluefy could change this in an update. Tap each link in Safari; only a
   scheme that lands on a page showing its own number actually carries the address. Number 3
   was the winner last time.</p>
@@ -81,9 +98,25 @@
     ['bluefy-browser://' + url(5), 5],
     ['pnnsoft-bluefy://' + url(6), 6],
   ];
-  document.getElementById('list').innerHTML = candidates
-    .map(([u, n]) => `<a class="scheme" href="${u}"><span>${n}</span><code>${u}</code></a>`)
-    .join('');
+  // BLE Link publishes no scheme, so these are the shapes worth trying. Same
+  // test as above: the number on the page it lands on has to match the number
+  // on the link, or the app opened but threw the address away.
+  const bleCandidates = [
+    ['blelink://' + url(11), 11],
+    ['blelink://open?url=' + encodeURIComponent('https://' + url(12)), 12],
+    ['ble-link://' + url(13), 13],
+    ['ble-link://open?url=' + encodeURIComponent('https://' + url(14)), 14],
+    ['blelinkbrowser://' + url(15), 15],
+    ['thirdwayv-blelink://' + url(16), 16],
+  ];
+
+  const paint = (id, list) => {
+    document.getElementById(id).innerHTML = list
+      .map(([u, n]) => `<a class="scheme" href="${u}"><span>${n}</span><code>${u}</code></a>`)
+      .join('');
+  };
+  paint('list', candidates);
+  paint('listBle', bleCandidates);
 
   // The confirmed one: Bluefy takes the target as an encoded url= parameter.
   const APP = 'https://bbass07.github.io/price-tags/';
