@@ -7,7 +7,7 @@
 <title>Price Tags</title>
 <!-- Bumped on every deploy. ui.js carries the same string; if the two
      disagree the browser has mixed an old file with a new one. -->
-<meta name="app-build" content="2026-09-11.10">
+<meta name="app-build" content="2026-09-11.11">
 <link rel="stylesheet" href="app.css">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
@@ -22,21 +22,9 @@
 <header class="topbar">
   <button id="btnBack" class="iconbtn" type="button" aria-label="Back to locations" hidden>&lsaquo;</button>
   <h1 id="viewTitle">Print</h1>
-  <button id="printerChip" class="chip chip--bad" type="button" aria-expanded="false">
+  <button id="printerChip" class="chip chip--bad" type="button">
     <span class="dot"></span><span id="printerChipText">No printer</span>
   </button>
-
-  <!-- Tapping the chip drops this open instead of jumping to Setup, so
-       connecting never costs you a half-built queue. Everything here is a
-       second face on the Setup card's controls, never a second copy. -->
-  <div id="printerPop" class="pop" hidden>
-    <p id="popState" class="muted">Not connected.</p>
-    <p id="popError" class="banner banner--bad" hidden></p>
-    <button id="popConnect" class="btn btn--primary" type="button">Connect printer</button>
-    <button id="popDisconnect" class="btn btn--ghost" type="button" hidden>Disconnect</button>
-    <label class="check"><input type="checkbox" id="popShowAll"> Show every Bluetooth device</label>
-    <button id="popSetup" class="btn btn--ghost" type="button">Printer settings</button>
-  </div>
 </header>
 
 <main>
@@ -170,6 +158,6 @@
 <!-- The build is in the URL so a cached index.html can never be paired with
      a different ui.js: a new page asks for a file name the old cache has
      never seen. -->
-<script type="module" src="js/ui.js?b=2026-09-11.10"></script>
+<script type="module" src="js/ui.js?b=2026-09-11.11"></script>
 </body>
 </html>

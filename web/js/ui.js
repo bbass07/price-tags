@@ -30,7 +30,6 @@ let view = 'print';
 
 function showView(name) {
   view = name;
-  setPrinterPop(false);
   for (const v of document.querySelectorAll('.view')) v.hidden = v.id !== `view-${name}`;
   for (const t of document.querySelectorAll('.tab')) t.classList.toggle('is-active', t.dataset.view === VIEW_TAB[name]);
   $('viewTitle').textContent = name === 'pick'
@@ -45,32 +44,21 @@ for (const tab of document.querySelectorAll('.tab')) {
   // of a half-built queue without hunting for a back arrow.
   tab.addEventListener('click', () => showView(tab.dataset.view));
 }
-$('printerChip').addEventListener('click', (e) => { e.stopPropagation(); togglePrinterPop(); });
+/**
+ * The header chip is the connect button. Web Bluetooth opens its device
+ * chooser only during a real tap, so this calls straight through — no menu in
+ * between — and the chooser itself is the only thing that appears.
+ *
+ * Once connected there is nothing left to pick, so it opens Setup instead,
+ * which is where disconnecting and the diagnostics live.
+ */
+$('printerChip').addEventListener('click', () => {
+  if (printer.connected || !isSupported()) return showView('setup');
+  runConnect($('printerChip'));
+});
 $('btnBack').addEventListener('click', () => showView('print'));
 
 // ── printer ───────────────────────────────────────────────────────────────
-
-// The chip's panel. Opening it is how you connect from wherever you are; the
-// Setup card stays the full version, one tap further in.
-function setPrinterPop(open) {
-  $('printerPop').hidden = !open;
-  $('printerChip').setAttribute('aria-expanded', String(open));
-  if (open) {
-    $('popShowAll').checked = $('showAllDevices').checked;
-    showConnectError('');
-  }
-}
-const togglePrinterPop = () => setPrinterPop($('printerPop').hidden);
-
-// Anything else on the page dismisses it, the way a menu should.
-document.addEventListener('click', (e) => {
-  if (!$('printerPop').hidden && !$('printerPop').contains(e.target)) setPrinterPop(false);
-});
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setPrinterPop(false); });
-
-$('popShowAll').addEventListener('change', (e) => { $('showAllDevices').checked = e.target.checked; });
-$('showAllDevices').addEventListener('change', (e) => { $('popShowAll').checked = e.target.checked; });
-$('popSetup').addEventListener('click', () => { setPrinterPop(false); showView('setup'); });
 
 
 const logLines = [];
@@ -106,13 +94,9 @@ function paintPrinterState() {
   const on = printer.connected;
   $('printerChip').className = `chip ${on ? 'chip--ok' : 'chip--bad'}`;
   $('printerChipText').textContent = on ? printerLabel() : 'No printer';
-  const text = printerStateText();
-  $('printerState').textContent = text;
-  $('popState').textContent = text;
+  $('printerState').textContent = printerStateText();
   $('btnConnect').hidden = on;
-  $('popConnect').hidden = on;
   $('btnDisconnect').hidden = !on;
-  $('popDisconnect').hidden = !on;
 }
 
 printer.addEventListener('connected', paintPrinterState);
@@ -146,24 +130,24 @@ function explainConnectError(err) {
   }
 }
 
-/** Put a connect failure on both the Setup card and the chip's panel. */
 function showConnectError(text) {
-  for (const id of ['printerError', 'popError']) {
-    const el = $(id);
-    el.hidden = !text;
-    el.textContent = text || '';
-  }
+  const el = $('printerError');
+  el.hidden = !text;
+  el.textContent = text || '';
   if (text) $('diagBox').open = true;
 }
 
 /**
- * Connect, driven from either the Setup card or the chip's panel.
+ * Connect, driven from either the header chip or the Setup card.
  *
  * Web Bluetooth only opens its device chooser during a real tap, so this must
  * be called straight from the click handler — never behind a timer.
  */
 async function runConnect(btn) {
   btn.disabled = true;
+  // The chooser can sit there a while; say so on the chip, which is on screen
+  // whichever button was pressed.
+  $('printerChipText').textContent = 'Connecting…';
   showConnectError('');
   plog(`connect requested — ${navigator.bluetooth ? 'Web Bluetooth present' : 'NO Web Bluetooth in this browser'}, secure context: ${window.isSecureContext}`);
   try {
@@ -172,13 +156,11 @@ async function runConnect(btn) {
     const info = await printer.identify();
     plog(`status: ${JSON.stringify(info.status?.raw)} problems: ${info.status?.problems?.join(', ') || 'none'}`);
     toast('Printer connected');
-    setPrinterPop(false);   // it did its job; get out of the way
   } catch (err) {
     const { fatal, text } = explainConnectError(err);
     plog(`connect failed [${err && err.name}] ${err && err.message ? err.message : '(no message)'}`);
-    // The reason shows in the panel if that is what you are looking at, so the
-    // toast no longer sends you to Setup to read it.
-    if (fatal) { showConnectError(text); toast('Could not connect', true); }
+    // The full reason is on the Setup card; the toast says where to read it.
+    if (fatal) { showConnectError(text); toast('Could not connect — see Setup', true); }
     else { plog(text); }
   } finally {
     btn.disabled = false;
@@ -187,7 +169,6 @@ async function runConnect(btn) {
 }
 
 $('btnConnect').addEventListener('click', () => runConnect($('btnConnect')));
-$('popConnect').addEventListener('click', () => runConnect($('popConnect')));
 
 $('btnCopyLog').addEventListener('click', async () => {
   const text = [
@@ -214,7 +195,6 @@ $('btnCopyLog').addEventListener('click', async () => {
 });
 
 $('btnDisconnect').addEventListener('click', () => printer.disconnect());
-$('popDisconnect').addEventListener('click', () => { printer.disconnect(); setPrinterPop(false); });
 
 if (!isSupported()) {
   const w = $('bleWarning');
@@ -224,10 +204,6 @@ if (!isSupported()) {
     ? 'Safari cannot use Bluetooth at all. On iPhone, open this page in the free <b>BLE Link</b> app; on a Mac, use <b>Chrome</b>.'
     : 'This browser has no Bluetooth support. Use <b>Chrome</b> on a computer, or <b>BLE Link</b> on iPhone. Firefox and Safari will not work.';
   $('btnConnect').disabled = true;
-  $('popConnect').disabled = true;
-  // The panel has no room for the full explanation; it points at the one place
-  // that does rather than saying nothing.
-  $('popSetup').textContent = 'Why it cannot connect';
 }
 
 // ── locations ─────────────────────────────────────────────────────────────
@@ -580,7 +556,7 @@ $('btnPrint').addEventListener('click', async () => {
 // nothing. Both carry the same build string, so the mismatch is detectable:
 // when it happens, throw the offline copy away and reload once.
 
-const BUILD = '2026-09-11.10';
+const BUILD = '2026-09-11.11';
 
 function currentBuild() {
   return document.querySelector('meta[name="app-build"]')?.content || '';
