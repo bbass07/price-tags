@@ -14,19 +14,29 @@ function blank() {
     locations: [],
     activeLocationId: null,
     labels: [],
-    // Label size is not a setting — the stock is always 30 x 15 mm, so it
-    // lives as a constant in render.js. Older backups carry labelWidthMm /
-    // labelHeightMm; `cleanSettings()` drops them so a stale 40 x 30 can't come back.
-    settings: { density: 6, printerNickname: "Jana's Tag Printer" },
+    // Anything that is fixed for this printer lives as a constant in code, not
+    // here — see DEAD_SETTINGS below for what used to be in this object and why.
+    settings: { printerNickname: "Jana's Tag Printer" },
   };
 }
 
+// Settings older versions wrote and this one no longer has. Label size is not a
+// setting (the stock is always 30 x 15 mm); autoFullscreen / fullscreenBroken
+// belonged to the Display card, and no iOS browser can put a page fullscreen;
+// density was the Darkness slider and is a constant in job.js now. Dropping
+// them here keeps a stale value from coming back out of an old backup.
+const DEAD_SETTINGS = ['labelWidthMm', 'labelHeightMm', 'autoFullscreen', 'fullscreenBroken', 'density'];
+
 /** Merge saved settings over the defaults, dropping fields we no longer use. */
 function cleanSettings(saved = {}) {
-  // autoFullscreen / fullscreenBroken belonged to the Display card. No iOS
-  // browser can put a page fullscreen, so the card and the setting are gone.
-  const { labelWidthMm, labelHeightMm, autoFullscreen, fullscreenBroken, ...rest } = saved;
+  const rest = { ...saved };
+  for (const key of DEAD_SETTINGS) delete rest[key];
   return { ...blank().settings, ...rest };
+}
+
+/** True if `saved` carries any setting this version has dropped. */
+function hasDeadSettings(saved = {}) {
+  return DEAD_SETTINGS.some((key) => key in saved);
 }
 
 /**
@@ -62,7 +72,7 @@ export class Store extends EventTarget {
       if (!raw) return blank();
       const parsed = JSON.parse(raw);
       const data = { ...blank(), ...parsed, settings: cleanSettings(parsed.settings) };
-      this.migrated = cleanLabels(data.labels) || 'labelWidthMm' in (parsed.settings || {});
+      this.migrated = cleanLabels(data.labels) || hasDeadSettings(parsed.settings);
       return data;
     } catch {
       return blank();

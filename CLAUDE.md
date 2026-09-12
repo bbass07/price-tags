@@ -102,6 +102,9 @@ Working and verified:
   transfer frames. Byte-for-byte agreement with the reference driver's headers
   was checked in the browser, not just assumed.
 - Label library, locations, queue with quantities, export/import.
+- Setup is four cards: Printer, Locations, Backup, App version. Display and
+  Printing were removed on 2026-09-11 — nothing in them could be changed
+  usefully.
 - Printing is two screens: the Print tab is a menu of full-size booth buttons
   (`view-print`), and picking one opens the product list with quantity steppers
   for that booth (`view-pick`). Switching booths clears the queue on purpose —
@@ -148,10 +151,17 @@ the instructions, a copy button, and a retest harness in case Bluefy changes it.
   tries.** WebKit on iPhone has no element fullscreen, and every iOS browser is
   built on WebKit, so a shell can expose `requestFullscreen` and ignore it. The
   Setup screen's Display card, `web/js/fullscreen.js`, and the `autoFullscreen`
-  / `fullscreenBroken` settings were all removed on 2026-09-11; `cleanSettings()`
-  in `store.js` strips the two dead fields off saved data and imported backups.
-  Do not add the control back — BLE Link has no fullscreen at all, so its
+  / `fullscreenBroken` settings were all removed on 2026-09-11 (see
+  `DEAD_SETTINGS` below). Do not add the control back — BLE Link has no fullscreen at all, so its
   address bar is simply always on screen.
+- **Darkness is fixed at 8** (`DENSITY` in `job.js`). It was a Setup slider and
+  nobody moved it; 8 prints cleanly on the 30 x 15 mm stock. Setup has no
+  Printing card any more.
+- **Settings this app dropped are listed once**, in `DEAD_SETTINGS` in
+  `store.js`. `cleanSettings()` strips them off saved data and imported backups,
+  and `hasDeadSettings()` makes the store write the cleaned copy back on the
+  next load, so nothing stale survives in localStorage or in an export. Add to
+  that list whenever a setting is removed.
 - **Renaming the printer over Bluetooth** is not worth attempting. The write
   opcodes exist (`WR_DEV_OPT` 0x68, `WR_DEV_PAR` 0x6A) but their payloads are
   undocumented and they sit beside the firmware-update range; the reference

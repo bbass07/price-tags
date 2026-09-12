@@ -463,12 +463,6 @@ $('printerNickname').addEventListener('input', (e) => {
   store.updateSettings({ printerNickname: e.target.value });
   paintPrinterState();
 });
-$('density').addEventListener('input', (e) => {
-  const v = Number(e.target.value);
-  $('densityValue').textContent = String(v);
-  store.updateSettings({ density: v });
-});
-
 $('btnExport').addEventListener('click', () => {
   const blob = new Blob([store.exportJSON()], { type: 'application/json' });
   const a = document.createElement('a');
@@ -519,7 +513,6 @@ $('btnPrint').addEventListener('click', async () => {
   try {
     await printLabels(printer, jobs, {
       booth: loc.booth,
-      settings: store.settings,
       onProgress: (done, total) => { btn.textContent = `Printing ${done}/${total}`; },
       log: plog,
     });
@@ -544,7 +537,7 @@ $('btnPrint').addEventListener('click', async () => {
 // nothing. Both carry the same build string, so the mismatch is detectable:
 // when it happens, throw the offline copy away and reload once.
 
-const BUILD = '2026-09-11.5';
+const BUILD = '2026-09-11.6';
 
 function currentBuild() {
   return document.querySelector('meta[name="app-build"]')?.content || '';
@@ -605,8 +598,6 @@ function refreshLists() {
 function boot() {
   $('buildStamp').textContent = BUILD;
   $('printerNickname').value = store.settings.printerNickname || '';
-  $('density').value = store.settings.density;
-  $('densityValue').textContent = String(store.settings.density);
   paintLocations();
   refreshLists();
   paintPrinterState();

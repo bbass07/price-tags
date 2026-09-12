@@ -9,6 +9,10 @@ import { compressForPrinter } from './lzma.js';
 import { CMD, parseStatus, statusProblems } from './frames.js';
 
 const SPP_BLOCK_SIZE = 512;
+
+// Darkness, 1-15. Fixed at 8: it was a Setup slider, but 8 prints cleanly on
+// the 30 x 15 mm stock and nobody ever needed to move it, so the setting went.
+const DENSITY = 8;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /** Poll INQUIRY_STA until `test` passes, or give up. */
@@ -28,7 +32,7 @@ async function pollStatus(link, test, { attempts, interval, what }) {
 }
 
 /** Turn one label into the compressed byte stream the printer wants. */
-export async function rasterise(label, { booth, settings }) {
+export async function rasterise(label, { booth }) {
   const canvas = document.createElement('canvas');
   renderLabel(canvas, {
     booth,
@@ -38,7 +42,7 @@ export async function rasterise(label, { booth, settings }) {
 
   const bitmap = canvasToBitmap(canvas);
   const head = toPrintheadCanvas(bitmap);
-  const density = { black: settings.density, red: settings.density };
+  const density = { black: DENSITY, red: DENSITY };
   const buffers = splitIntoBuffers(head, { density });
 
   // One LZMA stream over every buffer, exactly as the vendor sends it.
@@ -87,7 +91,7 @@ async function printPage(printer, compressed, speed, log) {
  * Print a queue of labels.
  * `jobs` is [{ label, qty }]; every label gets `booth` stamped at the top.
  */
-export async function printLabels(printer, jobs, { booth, settings, onProgress, log = () => {} }) {
+export async function printLabels(printer, jobs, { booth, onProgress, log = () => {} }) {
   const total = jobs.reduce((n, j) => n + j.qty, 0);
   let done = 0;
 
@@ -95,7 +99,7 @@ export async function printLabels(printer, jobs, { booth, settings, onProgress, 
     log(`rasterising "${label.name}"`);
     const { compressed, speed } = await rasterise(
       { name: label.name, priceText: label.priceDisplay ?? label.price },
-      { booth, settings }
+      { booth }
     );
     for (let copy = 0; copy < qty; copy++) {
       await printPage(printer, compressed, speed, log);

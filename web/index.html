@@ -7,7 +7,7 @@
 <title>Price Tags</title>
 <!-- Bumped on every deploy. ui.js carries the same string; if the two
      disagree the browser has mixed an old file with a new one. -->
-<meta name="app-build" content="2026-09-11.5">
+<meta name="app-build" content="2026-09-11.6">
 <link rel="stylesheet" href="app.css">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
@@ -95,14 +95,6 @@
     </div>
 
     <div class="card">
-      <h2>Printing</h2>
-      <p class="muted">Labels are 30 &times; 15 mm &mdash; the only size this app prints.</p>
-      <label class="field"><span>Darkness &mdash; <b id="densityValue">6</b></span>
-        <input id="density" type="range" min="1" max="15" step="1"></label>
-      <p class="muted">Turn it up if the print is faint, down if it smudges or bleeds.</p>
-    </div>
-
-    <div class="card">
       <h2>Backup</h2>
       <p class="muted">Your labels live on this device only. Export a copy now and then.</p>
       <div class="row">
@@ -172,6 +164,6 @@
 <!-- The build is in the URL so a cached index.html can never be paired with
      a different ui.js: a new page asks for a file name the old cache has
      never seen. -->
-<script type="module" src="js/ui.js?b=2026-09-11.5"></script>
+<script type="module" src="js/ui.js?b=2026-09-11.6"></script>
 </body>
 </html>
