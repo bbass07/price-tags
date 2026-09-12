@@ -7,7 +7,7 @@
 <title>Price Tags</title>
 <!-- Bumped on every deploy. ui.js carries the same string; if the two
      disagree the browser has mixed an old file with a new one. -->
-<meta name="app-build" content="2026-09-11.4">
+<meta name="app-build" content="2026-09-11.5">
 <link rel="stylesheet" href="app.css">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
@@ -95,13 +95,6 @@
     </div>
 
     <div class="card">
-      <h2>Display</h2>
-      <label class="check"><input type="checkbox" id="autoFullscreen"> Go fullscreen on first tap</label>
-      <p id="fullscreenSupport" class="muted"></p>
-      <button id="btnFullscreen" class="btn" type="button">Go fullscreen now</button>
-    </div>
-
-    <div class="card">
       <h2>Printing</h2>
       <p class="muted">Labels are 30 &times; 15 mm &mdash; the only size this app prints.</p>
       <label class="field"><span>Darkness &mdash; <b id="densityValue">6</b></span>
@@ -179,6 +172,6 @@
 <!-- The build is in the URL so a cached index.html can never be paired with
      a different ui.js: a new page asks for a file name the old cache has
      never seen. -->
-<script type="module" src="js/ui.js?b=2026-09-11.4"></script>
+<script type="module" src="js/ui.js?b=2026-09-11.5"></script>
 </body>
 </html>

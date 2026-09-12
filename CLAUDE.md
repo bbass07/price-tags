@@ -144,12 +144,14 @@ the instructions, a copy button, and a retest harness in case Bluefy changes it.
   the `open?url=` shortcut adds to rather than reuses. So Bluefy's advantage was
   one the owner never actually got to keep, against a problem that grows
   without limit. Do not propose going back without a new reason.
-- **Fullscreen on iPhone is impossible from the page.** WebKit on iPhone has no
-  element fullscreen, and every iOS browser is built on WebKit, so Bluefy
-  exposes `requestFullscreen` and ignores it. The app detects that, records
-  `settings.fullscreenBroken`, and stops offering the control. Bluefy's own
-  fullscreen button works but it forgets the setting between launches — a
-  Bluefy bug, not reachable from here.
+- **Fullscreen on iPhone is impossible from the page, and the app no longer
+  tries.** WebKit on iPhone has no element fullscreen, and every iOS browser is
+  built on WebKit, so a shell can expose `requestFullscreen` and ignore it. The
+  Setup screen's Display card, `web/js/fullscreen.js`, and the `autoFullscreen`
+  / `fullscreenBroken` settings were all removed on 2026-09-11; `cleanSettings()`
+  in `store.js` strips the two dead fields off saved data and imported backups.
+  Do not add the control back — BLE Link has no fullscreen at all, so its
+  address bar is simply always on screen.
 - **Renaming the printer over Bluetooth** is not worth attempting. The write
   opcodes exist (`WR_DEV_OPT` 0x68, `WR_DEV_PAR` 0x6A) but their payloads are
   undocumented and they sit beside the firmware-update range; the reference
@@ -161,9 +163,6 @@ the instructions, a copy button, and a retest harness in case Bluefy changes it.
 - Bulk entry / editing of a large library — adding labels one at a time is fine
   for a handful, tedious for hundreds. This is the owner's most likely next ask.
 - No barcode support; labels are text only.
-- BLE Link has no fullscreen at all, so its address bar is always on screen.
-  Nothing in the page can change that; the app's Display card detects it and
-  disables the toggle.
 - The app is served from GitHub Pages with `max-age=600`, so a phone can pair a
   new index.html with a ten-minute-old ui.js and simply stop responding. Guards:
   the service worker revalidates every fetch, index.html requests

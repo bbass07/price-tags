@@ -17,13 +17,15 @@ function blank() {
     // Label size is not a setting — the stock is always 30 x 15 mm, so it
     // lives as a constant in render.js. Older backups carry labelWidthMm /
     // labelHeightMm; `cleanSettings()` drops them so a stale 40 x 30 can't come back.
-    settings: { density: 6, printerNickname: "Jana's Tag Printer", autoFullscreen: true },
+    settings: { density: 6, printerNickname: "Jana's Tag Printer" },
   };
 }
 
 /** Merge saved settings over the defaults, dropping fields we no longer use. */
 function cleanSettings(saved = {}) {
-  const { labelWidthMm, labelHeightMm, ...rest } = saved;
+  // autoFullscreen / fullscreenBroken belonged to the Display card. No iOS
+  // browser can put a page fullscreen, so the card and the setting are gone.
+  const { labelWidthMm, labelHeightMm, autoFullscreen, fullscreenBroken, ...rest } = saved;
   return { ...blank().settings, ...rest };
 }
 

@@ -4,7 +4,6 @@ import { Store, formatPrice } from './store.js';
 import { Printer } from './printer.js';
 import { labelLayout, labelDots, renderLabel, canvasToBitmap } from './render.js';
 import { isSupported } from './ble.js';
-import * as fullscreen from './fullscreen.js';
 import { printLabels } from './job.js';
 
 const $ = (id) => document.getElementById(id);
@@ -460,49 +459,6 @@ $('fDelete').addEventListener('click', () => {
 
 // ── settings & backup ─────────────────────────────────────────────────────
 
-// ── fullscreen ────────────────────────────────────────────────────────────
-
-const NO_FULLSCREEN = 'This browser will not let a page go fullscreen \u2014 on iPhone none of them can, '
-  + 'because Apple\u2019s engine has no such feature and every iOS browser is built on it. '
-  + 'BLE Link has no fullscreen button of its own either, so its address bar stays put.';
-
-function paintFullscreenSupport(note) {
-  // `settings.fullscreenBroken` records a browser that claimed support and then
-  // did nothing, so we stop offering it on that device.
-  const supported = fullscreen.isSupported() && !store.settings.fullscreenBroken;
-  $('autoFullscreen').disabled = !supported;
-  $('btnFullscreen').disabled = !supported;
-  $('fullscreenSupport').textContent = note || (supported
-    ? 'Asked for on the first tap, because a browser that has its own setting tends to forget it between launches.'
-    : NO_FULLSCREEN);
-}
-
-$('autoFullscreen').addEventListener('change', (e) => {
-  store.updateSettings({ autoFullscreen: e.target.checked });
-});
-
-$('btnFullscreen').addEventListener('click', async () => {
-  try {
-    await fullscreen.enter();
-    store.updateSettings({ fullscreenBroken: false });
-    paintFullscreenSupport('Fullscreen on.');
-  } catch (err) {
-    plog(`fullscreen refused: ${err.message || err.name}`);
-    store.updateSettings({ fullscreenBroken: true });
-    paintFullscreenSupport(NO_FULLSCREEN);
-  }
-});
-
-fullscreen.armOnFirstGesture(
-  () => store.settings.autoFullscreen !== false && !store.settings.fullscreenBroken,
-  (ok, err) => {
-    if (ok) return;
-    plog(`auto fullscreen failed: ${err && (err.message || err.name)}`);
-    store.updateSettings({ fullscreenBroken: true });
-    paintFullscreenSupport(NO_FULLSCREEN);
-  }
-);
-
 $('printerNickname').addEventListener('input', (e) => {
   store.updateSettings({ printerNickname: e.target.value });
   paintPrinterState();
@@ -588,7 +544,7 @@ $('btnPrint').addEventListener('click', async () => {
 // nothing. Both carry the same build string, so the mismatch is detectable:
 // when it happens, throw the offline copy away and reload once.
 
-const BUILD = '2026-09-11.4';
+const BUILD = '2026-09-11.5';
 
 function currentBuild() {
   return document.querySelector('meta[name="app-build"]')?.content || '';
@@ -649,8 +605,6 @@ function refreshLists() {
 function boot() {
   $('buildStamp').textContent = BUILD;
   $('printerNickname').value = store.settings.printerNickname || '';
-  $('autoFullscreen').checked = store.settings.autoFullscreen !== false;
-  paintFullscreenSupport();
   $('density').value = store.settings.density;
   $('densityValue').textContent = String(store.settings.density);
   paintLocations();
