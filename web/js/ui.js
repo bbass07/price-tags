@@ -243,13 +243,10 @@ function openLocation(id) {
   if (store.activeLocation?.id !== id && queue.size) queue.clear();
   store.setActiveLocation(id);
   const loc = store.activeLocation;
-  $('boothStripName').textContent = `Printing for Booth ${loc.booth}`;
   $('printSearch').value = '';
   paintPrintList();
   showView('pick');
 }
-
-$('boothStrip').addEventListener('click', () => showView('print'));
 
 // ── label library ─────────────────────────────────────────────────────────
 
@@ -537,7 +534,7 @@ $('btnPrint').addEventListener('click', async () => {
 // nothing. Both carry the same build string, so the mismatch is detectable:
 // when it happens, throw the offline copy away and reload once.
 
-const BUILD = '2026-09-11.6';
+const BUILD = '2026-09-11.7';
 
 function currentBuild() {
   return document.querySelector('meta[name="app-build"]')?.content || '';

@@ -7,7 +7,7 @@
 <title>Price Tags</title>
 <!-- Bumped on every deploy. ui.js carries the same string; if the two
      disagree the browser has mixed an old file with a new one. -->
-<meta name="app-build" content="2026-09-11.6">
+<meta name="app-build" content="2026-09-11.7">
 <link rel="stylesheet" href="app.css">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
@@ -37,11 +37,6 @@
 
   <!-- ──────────── Print, step 2: how many of what? ─────────── -->
   <section id="view-pick" class="view" hidden>
-    <button id="boothStrip" class="boothstrip" type="button">
-      <b id="boothStripName"></b>
-      <span class="boothstrip__change">Change</span>
-    </button>
-
     <div class="searchrow">
       <input id="printSearch" class="input" type="search" placeholder="Search labels" autocomplete="off">
       <button id="clearQueue" class="btn btn--ghost" type="button">Clear</button>
@@ -164,6 +159,6 @@
 <!-- The build is in the URL so a cached index.html can never be paired with
      a different ui.js: a new page asks for a file name the old cache has
      never seen. -->
-<script type="module" src="js/ui.js?b=2026-09-11.6"></script>
+<script type="module" src="js/ui.js?b=2026-09-11.7"></script>
 </body>
 </html>

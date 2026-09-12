@@ -108,7 +108,10 @@ Working and verified:
 - Printing is two screens: the Print tab is a menu of full-size booth buttons
   (`view-print`), and picking one opens the product list with quantity steppers
   for that booth (`view-pick`). Switching booths clears the queue on purpose —
-  quantities carried across would print the wrong booth number.
+  quantities carried across would print the wrong booth number. The pick screen
+  names its booth in the header title only; the "Printing for Booth _ / Change"
+  strip above the list was removed on 2026-09-11. The way back to the booth menu
+  is the header's back arrow or the Print tab, both of which already existed.
 
 Live at **https://bbass07.github.io/price-tags/** (repo `bbass07/price-tags`,
 deployed from `web/` by `.github/workflows/pages.yml` on every push to `main`).

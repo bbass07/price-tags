@@ -143,16 +143,6 @@ main { padding: 16px; max-width: 720px; margin: 0 auto; }
 .loccard:active .loccard__name { color: var(--accent-ink); }
 .loccard:active .loccard__booth { color: var(--accent-ink); }
 
-/* Which booth is being printed for, kept in sight above the product list. */
-.boothstrip {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  width: 100%; padding: 10px 14px; cursor: pointer; text-align: left;
-  border: 1px solid var(--line); border-radius: 12px;
-  background: var(--surface); color: var(--text);
-}
-.boothstrip b { font-size: 16px; }
-.boothstrip__change { font-size: 14px; color: var(--accent); flex: 0 0 auto; }
-
 /* ── lists ───────────────────────────────────────────────── */
 .list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .list--tight { gap: 4px; }
