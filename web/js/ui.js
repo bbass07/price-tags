@@ -188,11 +188,10 @@ if (!isSupported()) {
 function paintLocations() {
   const cards = $('locCards');
   cards.innerHTML = '';
-  // With nothing to choose between, the question and its empty grid would just
-  // strand the explanation at the bottom of a tall screen.
+  // With nothing to choose between, an empty grid would just strand the
+  // explanation at the bottom of a tall screen.
   const empty = store.locations.length === 0;
   cards.hidden = empty;
-  $('locLead').hidden = empty;
   $('locEmpty').hidden = !empty;
   for (const loc of store.locations) {
     const b = document.createElement('button');
@@ -534,7 +533,7 @@ $('btnPrint').addEventListener('click', async () => {
 // nothing. Both carry the same build string, so the mismatch is detectable:
 // when it happens, throw the offline copy away and reload once.
 
-const BUILD = '2026-09-11.8';
+const BUILD = '2026-09-11.9';
 
 function currentBuild() {
   return document.querySelector('meta[name="app-build"]')?.content || '';

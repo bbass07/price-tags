@@ -127,8 +127,6 @@ main { padding: 16px; max-width: 720px; margin: 0 auto; }
 /* ── picking a booth ─────────────────────────────────────── */
 /* The first thing you do at a booth is say which booth you are at, so it gets
    the whole screen: two targets you can hit without looking. */
-.lead { margin: 0; font-size: 17px; color: var(--muted); }
-
 .loccards { display: flex; flex-direction: column; gap: 14px; flex: 1; }
 .loccard {
   flex: 1 1 0; min-height: 132px; cursor: pointer;
