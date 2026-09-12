@@ -11,10 +11,14 @@ The owner does not want to re-sign a sideloaded app every 7 days or pay for a
 developer account. So this ships as a static web app.
 
 The catch: **iOS Safari has no Web Bluetooth and never will** (Apple blocks it).
-The workaround is [Bluefy](https://apps.apple.com/us/app/bluefy-web-ble-browser/id1492822055),
-a free App Store browser that implements the Web Bluetooth API. The app is
-opened inside Bluefy on the iPhone, over HTTPS, and talks BLE straight to the
-printer. Nothing to sign, nothing to renew.
+The workaround is a third-party browser that implements the Web Bluetooth API.
+The app is opened inside one of those on the iPhone, over HTTPS, and talks BLE
+straight to the printer. Nothing to sign, nothing to renew.
+
+**[BLE Link](https://apps.apple.com/us/app/ble-link-web-ble-browser/id6468414672)
+is the one in use** (free, iOS 16.4+). End-to-end print confirmed on it
+(2026-09-11). [Bluefy](https://apps.apple.com/us/app/bluefy-web-ble-browser/id1492822055)
+was used before it and still works — see the browser trade-off below.
 
 For development, Chrome on macOS supports Web Bluetooth natively — test there
 first, then confirm on the phone.
@@ -116,8 +120,12 @@ Bluefy has no "Add to Home Screen", and Safari's version is a trap — it makes 
 convincing standalone app that runs on WebKit and therefore can never reach the
 printer. Third-party engines that could install a real web app are EU-only.
 
-The working route is an iOS Shortcut using Bluefy's deep link, confirmed on the
-owner's phone (2026-09-06):
+With BLE Link there may be no Home Screen route at all — it publishes no URL
+scheme, so the Shortcut trick below has nothing to point at. Tapping BLE Link's
+own icon is the fallback, and costs the same one tap.
+
+The Bluefy route, confirmed on the owner's phone (2026-09-06), kept here
+because it is the only one proven to work:
 
 ```
 bluefy://open?url=https%3A%2F%2Fbbass07.github.io%2Fprice-tags%2F
@@ -129,6 +137,12 @@ the instructions, a copy button, and a retest harness in case Bluefy changes it.
 
 ### Settled, do not relitigate
 
+- **BLE Link over Bluefy** (decided 2026-09-11 after testing both on the
+  owner's phone). BLE Link has no tabs and no fullscreen; Bluefy has both, but
+  forgets fullscreen on every launch and keeps every past session as a tab that
+  the `open?url=` shortcut adds to rather than reuses. So Bluefy's advantage was
+  one the owner never actually got to keep, against a problem that grows
+  without limit. Do not propose going back without a new reason.
 - **Fullscreen on iPhone is impossible from the page.** WebKit on iPhone has no
   element fullscreen, and every iOS browser is built on WebKit, so Bluefy
   exposes `requestFullscreen` and ignores it. The app detects that, records
@@ -146,11 +160,10 @@ the instructions, a copy button, and a retest harness in case Bluefy changes it.
 - Bulk entry / editing of a large library — adding labels one at a time is fine
   for a handful, tedious for hundreds. This is the owner's most likely next ask.
 - No barcode support; labels are text only.
-- **BLE Link** (free, App Store id6468414672, iOS 16.4+) is being tried as a
-  Bluefy replacement — Bluefy keeps every past session as a tab and the
-  `open?url=` shortcut always opens another, so they pile up. `home-screen.html`
-  carries the install steps and a scheme tester (numbers 11–16); BLE Link
-  publishes no URL scheme, so the winner has to be found by tapping.
+- Whether BLE Link has a URL scheme at all is **untested** — its App Store
+  listing names none, and until one is found there is no Home Screen shortcut
+  for it, only its own app icon. `home-screen.html` carries a tester
+  (numbers 11–16).
 - The app is served from GitHub Pages with `max-age=600`, so a phone can pair a
   new index.html with a ten-minute-old ui.js and simply stop responding. Guards:
   the service worker revalidates every fetch, index.html requests
