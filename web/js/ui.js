@@ -198,8 +198,8 @@ function paintLocations() {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'loccard';
-    b.innerHTML = `<span class="loccard__booth">Booth ${escapeHtml(loc.booth)}</span>` +
-      `<span class="loccard__name">${escapeHtml(loc.name)}</span>`;
+    b.innerHTML = `<span class="loccard__name">${escapeHtml(loc.name)}</span>` +
+      `<span class="loccard__booth">Booth ${escapeHtml(loc.booth)}</span>`;
     b.addEventListener('click', () => openLocation(loc.id));
     cards.appendChild(b);
   }
@@ -534,7 +534,7 @@ $('btnPrint').addEventListener('click', async () => {
 // nothing. Both carry the same build string, so the mismatch is detectable:
 // when it happens, throw the offline copy away and reload once.
 
-const BUILD = '2026-09-11.7';
+const BUILD = '2026-09-11.8';
 
 function currentBuild() {
   return document.querySelector('meta[name="app-build"]')?.content || '';

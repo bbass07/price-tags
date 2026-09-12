@@ -137,8 +137,14 @@ main { padding: 16px; max-width: 720px; margin: 0 auto; }
   border: 1px solid var(--line); border-radius: 18px;
   background: var(--surface); color: var(--text);
 }
-.loccard__booth { font-size: clamp(30px, 11vw, 52px); font-weight: 700; line-height: 1; }
-.loccard__name { font-size: 17px; color: var(--muted); }
+/* The location name is the big line — it is what the owner reads to pick a
+   booth. It caps lower than a bare number could and wraps, because names run
+   long where "7" never did. */
+.loccard__name {
+  font-size: clamp(26px, 8vw, 40px); font-weight: 700; line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+.loccard__booth { font-size: 17px; color: var(--muted); }
 .loccard:active { background: var(--accent); border-color: var(--accent); }
 .loccard:active .loccard__name { color: var(--accent-ink); }
 .loccard:active .loccard__booth { color: var(--accent-ink); }
