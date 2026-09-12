@@ -1,6 +1,6 @@
 // ble.js — Web Bluetooth transport for the Supvan/Katasymbol T50M Pro.
 //
-// Works in Chrome/Edge on desktop and Android, and in the Bluefy browser on
+// Works in Chrome/Edge on desktop and Android, and in the BLE Link browser on
 // iOS. It does NOT work in Safari — Apple does not implement Web Bluetooth.
 
 import { makeCmd, makeCmdStartTrans, isAckFor, MAGIC1, MAGIC2 } from './frames.js';
@@ -42,7 +42,7 @@ export class PrinterLink extends EventTarget {
   async connect({ showAll = false } = {}) {
     if (!isSupported()) {
       throw new Error(
-        'This browser has no Bluetooth support. On iPhone, open this page in the Bluefy app.'
+        'This browser has no Bluetooth support. On iPhone, open this page in the BLE Link app.'
       );
     }
     // Catches the most common cause of a silent failure: the radio is simply

@@ -92,7 +92,7 @@ printer.addEventListener('disconnected', () => { toast('Printer disconnected', t
 
 /**
  * Turn whatever the Bluetooth stack threw into something a human can act on.
- * Chrome and Bluefy both report failures as bare DOMExceptions, sometimes with
+ * Chrome and the iPhone BLE browsers all report failures as bare DOMExceptions, sometimes with
  * an empty message, so the error *name* is usually the only real signal.
  */
 function explainConnectError(err) {
@@ -112,7 +112,7 @@ function explainConnectError(err) {
     case 'NetworkError':
       return { fatal: true, text: 'The printer was found but dropped the connection. Turn it off and on and try again.' };
     case 'NotSupportedError':
-      return { fatal: true, text: 'This browser cannot do Bluetooth. Use Chrome on a computer, or the Bluefy app on iPhone.' };
+      return { fatal: true, text: 'This browser cannot do Bluetooth. Use Chrome on a computer, or the BLE Link app on iPhone.' };
     default:
       return { fatal: true, text: detail || `Bluetooth failed with "${name}" and gave no reason. The diagnostics below have the details.` };
   }
@@ -179,8 +179,8 @@ if (!isSupported()) {
   w.hidden = false;
   w.classList.add('banner--bad');
   w.innerHTML = /iPhone|iPad|Mac/.test(navigator.platform) && /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent)
-    ? 'Safari cannot use Bluetooth at all. On iPhone, open this page in the free <b>Bluefy</b> app; on a Mac, use <b>Chrome</b>.'
-    : 'This browser has no Bluetooth support. Use <b>Chrome</b> on a computer, or <b>Bluefy</b> on iPhone. Firefox and Safari will not work.';
+    ? 'Safari cannot use Bluetooth at all. On iPhone, open this page in the free <b>BLE Link</b> app; on a Mac, use <b>Chrome</b>.'
+    : 'This browser has no Bluetooth support. Use <b>Chrome</b> on a computer, or <b>BLE Link</b> on iPhone. Firefox and Safari will not work.';
   $('btnConnect').disabled = true;
 }
 
@@ -464,7 +464,7 @@ $('fDelete').addEventListener('click', () => {
 
 const NO_FULLSCREEN = 'This browser will not let a page go fullscreen \u2014 on iPhone none of them can, '
   + 'because Apple\u2019s engine has no such feature and every iOS browser is built on it. '
-  + 'Use Bluefy\u2019s own fullscreen button after launching.';
+  + 'BLE Link has no fullscreen button of its own either, so its address bar stays put.';
 
 function paintFullscreenSupport(note) {
   // `settings.fullscreenBroken` records a browser that claimed support and then
@@ -473,7 +473,7 @@ function paintFullscreenSupport(note) {
   $('autoFullscreen').disabled = !supported;
   $('btnFullscreen').disabled = !supported;
   $('fullscreenSupport').textContent = note || (supported
-    ? 'Bluefy forgets its own fullscreen setting between launches, so the app asks for it instead.'
+    ? 'Asked for on the first tap, because a browser that has its own setting tends to forget it between launches.'
     : NO_FULLSCREEN);
 }
 
@@ -588,7 +588,7 @@ $('btnPrint').addEventListener('click', async () => {
 // nothing. Both carry the same build string, so the mismatch is detectable:
 // when it happens, throw the offline copy away and reload once.
 
-const BUILD = '2026-09-11.3';
+const BUILD = '2026-09-11.4';
 
 function currentBuild() {
   return document.querySelector('meta[name="app-build"]')?.content || '';

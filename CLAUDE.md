@@ -120,12 +120,13 @@ Bluefy has no "Add to Home Screen", and Safari's version is a trap — it makes 
 convincing standalone app that runs on WebKit and therefore can never reach the
 printer. Third-party engines that could install a real web app are EU-only.
 
-With BLE Link there may be no Home Screen route at all — it publishes no URL
-scheme, so the Shortcut trick below has nothing to point at. Tapping BLE Link's
-own icon is the fallback, and costs the same one tap.
+**With BLE Link there is nothing to set up.** It reopens on the last page, so
+tapping its own icon lands in Price Tags — confirmed on the owner's phone
+(2026-09-11). No Shortcut, no scheme, nothing to redo. Its URL scheme was never
+found and is not needed; `home-screen.html` keeps a tester in case that changes.
 
-The Bluefy route, confirmed on the owner's phone (2026-09-06), kept here
-because it is the only one proven to work:
+The Bluefy route, confirmed on the owner's phone (2026-09-06), kept only as a
+fallback:
 
 ```
 bluefy://open?url=https%3A%2F%2Fbbass07.github.io%2Fprice-tags%2F
@@ -160,10 +161,9 @@ the instructions, a copy button, and a retest harness in case Bluefy changes it.
 - Bulk entry / editing of a large library — adding labels one at a time is fine
   for a handful, tedious for hundreds. This is the owner's most likely next ask.
 - No barcode support; labels are text only.
-- Whether BLE Link has a URL scheme at all is **untested** — its App Store
-  listing names none, and until one is found there is no Home Screen shortcut
-  for it, only its own app icon. `home-screen.html` carries a tester
-  (numbers 11–16).
+- BLE Link has no fullscreen at all, so its address bar is always on screen.
+  Nothing in the page can change that; the app's Display card detects it and
+  disables the toggle.
 - The app is served from GitHub Pages with `max-age=600`, so a phone can pair a
   new index.html with a ten-minute-old ui.js and simply stop responding. Guards:
   the service worker revalidates every fetch, index.html requests

@@ -1,7 +1,7 @@
 // fullscreen.js — best-effort fullscreen, for browsers that bother to implement it.
 //
-// Bluefy has a fullscreen mode of its own but forgets it between launches, so
-// the app asks for fullscreen itself. The Fullscreen API needs a user gesture
+// BLE Link has no fullscreen of its own and Bluefy forgets its own setting
+// between launches, so the app asks for fullscreen itself. The Fullscreen API needs a user gesture
 // and is not implemented by every iOS shell, hence the feature reporting: it
 // is better to say "this browser cannot" than to leave a toggle that silently
 // does nothing.
