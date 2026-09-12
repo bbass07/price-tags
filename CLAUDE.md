@@ -102,6 +102,13 @@ Working and verified:
   transfer frames. Byte-for-byte agreement with the reference driver's headers
   was checked in the browser, not just assumed.
 - Label library, locations, queue with quantities, export/import.
+- The printer chip in the header opens a small panel (`#printerPop`) with the
+  connect button, the show-every-device tick, and any failure reason, so
+  connecting never means leaving a half-built queue. It is a second face on the
+  Setup card's controls, not a second copy: `runConnect()` serves both buttons
+  and `paintPrinterState()` paints both. Web Bluetooth only opens its chooser
+  during a real tap, so `runConnect` must stay reachable straight from a click
+  handler — never behind a timer or an await.
 - Setup is four cards: Printer, Locations, Backup, App version. Display and
   Printing were removed on 2026-09-11 — nothing in them could be changed
   usefully.
