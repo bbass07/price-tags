@@ -125,9 +125,9 @@ Working and verified:
   names its booth in the header title only; the "Printing for Booth _ / Change"
   strip above the list was removed on 2026-09-11. The way back to the booth menu
   is the header's back arrow or the Print tab, both of which already existed.
-- The booth menu cannot scroll or bounce — confirmed on the owner's phone in
-  BLE Link (2026-09-13). How it is done, and how to do it for another screen,
-  is under "Making a screen unscrollable" below.
+- Both Print screens are pinned (2026-09-13): the booth menu cannot move at
+  all, and on the label list only the area between the bars scrolls. How, and
+  how to do it for another screen, is under "Making a screen unscrollable".
 
 Live at **https://bbass07.github.io/price-tags/** (repo `bbass07/price-tags`,
 deployed from `web/` by `.github/workflows/pages.yml` on every push to `main`).
@@ -138,41 +138,46 @@ inherited from the reference driver is correct in practice.
 
 ## Making a screen unscrollable
 
-Used on the Print tab's booth menu (`view-print`); confirmed on the owner's
-iPhone in BLE Link (2026-09-13). Reuse it for any screen that should fit the
-window and never move under a thumb. It takes **both** halves — the CSS alone
-passes in desktop Chrome and still bounces on the phone.
+Used on both Print screens — the booth menu (`view-print`) and the label list
+(`view-pick`). The booth menu version was confirmed on the owner's iPhone in
+BLE Link (2026-09-13); the label list got it the same day. The page itself
+never moves: the header, tab bar and print bar stay put, and the only thing
+that can scroll is the area between them. It takes **both** halves below — the
+CSS alone passes in desktop Chrome and still bounces on the phone.
 
 1. **Pin the page (CSS, `app.css`).** A `lock` class on `<html>` fixes the body
    to the window as a flex column, so `main` gets exactly the height between
-   the header and the tab bar. The view inside uses `height: 100%` — never a
-   `calc(100dvh - Npx)` guess, which is what ran a few pixels over originally.
+   the header and the tab bar and becomes the scroll area. The print bar drops
+   into that column too, so it sits above the tab bar instead of covering the
+   last row. A view that should fill the space uses `view--fill` (`height:
+   100%`) — never a `calc(100dvh - Npx)` guess, which ran a few pixels over.
    ```css
    .lock, .lock body { height: 100%; overflow: hidden; overscroll-behavior: none; }
    .lock body { position: fixed; inset: 0; display: flex; flex-direction: column; }
-   .lock main { flex: 1; min-height: 0; width: 100%; overflow-y: auto; overscroll-behavior: none; }
+   .lock main { flex: 1; min-height: 0; width: 100%; overflow-y: auto; overscroll-behavior: contain; }
+   .lock .printbar { position: static; }
    .view--fill { height: 100%; }
    ```
-2. **Refuse the drag (JS, `ui.js`).** iOS rubber-bands even a page with nothing
-   to scroll, and no CSS stops that inside BLE Link. Cancelling `touchmove` does.
-   It must be `{ passive: false }` or the cancel is ignored. Taps are not drags,
-   so buttons keep working. If the content ever does overflow, the drag is let
-   through so it can still be reached.
+2. **Refuse the drag (JS, `ui.js`).** iOS rubber-bands even a pinned page, and
+   no CSS stops that inside BLE Link. Cancelling `touchmove` does. It must be
+   `{ passive: false }` or the cancel is ignored. A drag is let through only if
+   it starts inside `main` and `main` has something to scroll; drags on the
+   bars, or on a screen that fits, go nowhere. Taps are not drags.
    ```js
+   const LOCKED = new Set(['print', 'pick']);
    document.addEventListener('touchmove', (e) => {
-     if (view !== 'print') return;
+     if (!LOCKED.has(view)) return;
      const main = document.querySelector('main');
-     if (main.scrollHeight <= main.clientHeight) e.preventDefault();
+     if (main.contains(e.target) && main.scrollHeight > main.clientHeight) return;
+     e.preventDefault();
    }, { passive: false });
    ```
 
-To lock another screen, say `setup`: give its `<section>` the `view--fill`
-class, and add its name in the two places that currently say `'print'` —
-`showView()`'s `classList.toggle('lock', …)` line and the `view !== 'print'`
-check above. A set such as `const LOCKED = new Set(['print', 'setup'])` used in
-both is the tidy way once there are two. Keep `class="lock"` on `<html>` in
-`index.html` only while the app opens on a locked screen. Test by dragging on
-the phone; desktop Chrome cannot reproduce the bounce.
+To lock another screen, add its view name to `LOCKED` in `ui.js` — that is the
+only list; `showView()` toggles the class from it and resets `main`'s scroll to
+the top on every screen change. Keep `class="lock"` on `<html>` in `index.html`
+only while the app opens on a locked screen. Test by dragging on the phone;
+desktop Chrome cannot reproduce the bounce.
 
 ## Getting it onto the Home Screen
 

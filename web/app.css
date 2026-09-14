@@ -73,7 +73,10 @@ main { padding: 16px; max-width: 720px; margin: 0 auto; }
    guessed height that ran a few pixels over and let the page move. */
 .lock, .lock body { height: 100%; overflow: hidden; overscroll-behavior: none; }
 .lock body { position: fixed; inset: 0; display: flex; flex-direction: column; }
-.lock main { flex: 1; min-height: 0; width: 100%; overflow-y: auto; overscroll-behavior: none; }
+.lock main { flex: 1; min-height: 0; width: 100%; overflow-y: auto; overscroll-behavior: contain; }
+/* On a locked screen the print bar takes its own row above the tab bar, so it
+   no longer covers the last labels in the list. */
+.lock .printbar { position: static; }
 .view--fill { height: 100%; }
 [hidden] { display: none !important; }
 

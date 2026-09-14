@@ -27,10 +27,15 @@ function toast(msg, bad = false) {
 // a screen of its own that still belongs to the Print tab.
 const VIEW_TAB = { print: 'print', pick: 'print', labels: 'labels', setup: 'setup' };
 let view = 'print';
+// Screens pinned between the header and the tab bar: the page itself never
+// moves, and only the area between the bars scrolls. See CLAUDE.md,
+// "Making a screen unscrollable".
+const LOCKED = new Set(['print', 'pick']);
 
 function showView(name) {
+  if (name !== view) document.querySelector('main').scrollTop = 0;
   view = name;
-  document.documentElement.classList.toggle('lock', name === 'print');
+  document.documentElement.classList.toggle('lock', LOCKED.has(name));
   for (const v of document.querySelectorAll('.view')) v.hidden = v.id !== `view-${name}`;
   for (const t of document.querySelectorAll('.tab')) t.classList.toggle('is-active', t.dataset.view === VIEW_TAB[name]);
   $('viewTitle').textContent = name === 'pick'
@@ -59,14 +64,16 @@ $('printerChip').addEventListener('click', () => {
 });
 $('btnBack').addEventListener('click', () => showView('print'));
 
-// The booth menu fits the screen, but iOS still rubber-bands a page that has
-// nothing to scroll, and CSS cannot stop that inside the BLE browsers. Refusing
-// the drag itself does. Taps are not drags, so the buttons still work. If a
-// long list of booths ever overflows, the drag is let through so it scrolls.
+// iOS rubber-bands the whole page even when it is pinned, and CSS cannot stop
+// that inside the BLE browsers. Refusing the drag itself does. On a locked
+// screen a drag is let through only when it starts inside the area between the
+// bars and there is something there to scroll; drags on the bars, or on a
+// screen that fits, go nowhere. Taps are not drags, so buttons still work.
 document.addEventListener('touchmove', (e) => {
-  if (view !== 'print') return;
+  if (!LOCKED.has(view)) return;
   const main = document.querySelector('main');
-  if (main.scrollHeight <= main.clientHeight) e.preventDefault();
+  if (main.contains(e.target) && main.scrollHeight > main.clientHeight) return;
+  e.preventDefault();
 }, { passive: false });
 
 // ── printer ───────────────────────────────────────────────────────────────
@@ -545,7 +552,7 @@ $('btnPrint').addEventListener('click', async () => {
 // nothing. Both carry the same build string, so the mismatch is detectable:
 // when it happens, throw the offline copy away and reload once.
 
-const BUILD = '2026-09-13.4';
+const BUILD = '2026-09-13.5';
 
 function currentBuild() {
   return document.querySelector('meta[name="app-build"]')?.content || '';
