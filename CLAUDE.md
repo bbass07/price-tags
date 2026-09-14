@@ -125,13 +125,9 @@ Working and verified:
   names its booth in the header title only; the "Printing for Booth _ / Change"
   strip above the list was removed on 2026-09-11. The way back to the booth menu
   is the header's back arrow or the Print tab, both of which already existed.
-- The booth menu cannot scroll (2026-09-13). `showView` puts a `lock` class on
-  `<html>` for the `print` view only, which pins the body to the window so the
-  bars and tiles stop shifting and bouncing under a thumb. Every other screen
-  scrolls normally. Do not go back to sizing the view with a `100dvh - Npx` guess.
-  CSS alone was not enough on the phone: BLE Link still rubber-banded the page.
-  A non-passive `touchmove` listener cancels drags on that view (unless the
-  booth list overflows), which is what actually stops it.
+- The booth menu cannot scroll or bounce — confirmed on the owner's phone in
+  BLE Link (2026-09-13). How it is done, and how to do it for another screen,
+  is under "Making a screen unscrollable" below.
 
 Live at **https://bbass07.github.io/price-tags/** (repo `bbass07/price-tags`,
 deployed from `web/` by `.github/workflows/pages.yml` on every push to `main`).
@@ -139,6 +135,44 @@ deployed from `web/` by `.github/workflows/pages.yml` on every push to `main`).
 **End-to-end print confirmed on real hardware (2026-09-06)** from Bluefy on an
 iPhone: connect, render, compress, transfer, print. The 8-dot feed margin
 inherited from the reference driver is correct in practice.
+
+## Making a screen unscrollable
+
+Used on the Print tab's booth menu (`view-print`); confirmed on the owner's
+iPhone in BLE Link (2026-09-13). Reuse it for any screen that should fit the
+window and never move under a thumb. It takes **both** halves — the CSS alone
+passes in desktop Chrome and still bounces on the phone.
+
+1. **Pin the page (CSS, `app.css`).** A `lock` class on `<html>` fixes the body
+   to the window as a flex column, so `main` gets exactly the height between
+   the header and the tab bar. The view inside uses `height: 100%` — never a
+   `calc(100dvh - Npx)` guess, which is what ran a few pixels over originally.
+   ```css
+   .lock, .lock body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+   .lock body { position: fixed; inset: 0; display: flex; flex-direction: column; }
+   .lock main { flex: 1; min-height: 0; width: 100%; overflow-y: auto; overscroll-behavior: none; }
+   .view--fill { height: 100%; }
+   ```
+2. **Refuse the drag (JS, `ui.js`).** iOS rubber-bands even a page with nothing
+   to scroll, and no CSS stops that inside BLE Link. Cancelling `touchmove` does.
+   It must be `{ passive: false }` or the cancel is ignored. Taps are not drags,
+   so buttons keep working. If the content ever does overflow, the drag is let
+   through so it can still be reached.
+   ```js
+   document.addEventListener('touchmove', (e) => {
+     if (view !== 'print') return;
+     const main = document.querySelector('main');
+     if (main.scrollHeight <= main.clientHeight) e.preventDefault();
+   }, { passive: false });
+   ```
+
+To lock another screen, say `setup`: give its `<section>` the `view--fill`
+class, and add its name in the two places that currently say `'print'` —
+`showView()`'s `classList.toggle('lock', …)` line and the `view !== 'print'`
+check above. A set such as `const LOCKED = new Set(['print', 'setup'])` used in
+both is the tidy way once there are two. Keep `class="lock"` on `<html>` in
+`index.html` only while the app opens on a locked screen. Test by dragging on
+the phone; desktop Chrome cannot reproduce the bounce.
 
 ## Getting it onto the Home Screen
 
