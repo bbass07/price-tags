@@ -83,7 +83,9 @@ reference/    cloned protocol documentation (not our code)
 - The app must work offline once loaded (service worker), because booths have
   bad signal.
 - The label library is the user's data. Never lose it: everything persists
-  immediately, and export/import to a JSON file is a first-class feature.
+  immediately. The owner keeps their own backup outside the app, so the
+  in-app Export/Import card was removed on 2026-09-13 at their request.
+  `store.exportJSON()` / `importJSON()` are still there, unused, for bulk entry.
 
 ## Status
 
@@ -101,7 +103,7 @@ Working and verified:
   firmware's odd 256-stride checksum, LZMA1 at 8 KB dictionary, 512-byte
   transfer frames. Byte-for-byte agreement with the reference driver's headers
   was checked in the browser, not just assumed.
-- Label library, locations, queue with quantities, export/import.
+- Label library, locations, queue with quantities.
 - The printer chip in the header *is* the connect button: tapping it goes
   straight to the Bluetooth chooser, from whatever screen you are on, so
   connecting never costs a half-built queue. It reads "Connecting…" while the
@@ -113,9 +115,9 @@ Working and verified:
   a timer or an await. A panel of connect options hung under the chip was tried
   on 2026-09-11 and removed the same day: the chooser is the only picker needed,
   and a menu in front of it was one tap too many.
-- Setup is four cards: Printer, Locations, Backup, App version. Display and
+- Setup is three cards: Printer, Locations, App version. Display and
   Printing were removed on 2026-09-11 — nothing in them could be changed
-  usefully.
+  usefully — and Backup on 2026-09-13.
 - Printing is two screens: the Print tab is a menu of full-size booth buttons
   (`view-print`), and picking one opens the product list with quantity steppers
   for that booth (`view-pick`). Switching booths clears the queue on purpose —
@@ -123,6 +125,10 @@ Working and verified:
   names its booth in the header title only; the "Printing for Booth _ / Change"
   strip above the list was removed on 2026-09-11. The way back to the booth menu
   is the header's back arrow or the Print tab, both of which already existed.
+- The booth menu cannot scroll (2026-09-13). `showView` puts a `lock` class on
+  `<html>` for the `print` view only, which pins the body to the window so the
+  bars and tiles stop shifting and bouncing under a thumb. Every other screen
+  scrolls normally. Do not go back to sizing the view with a `100dvh - Npx` guess.
 
 Live at **https://bbass07.github.io/price-tags/** (repo `bbass07/price-tags`,
 deployed from `web/` by `.github/workflows/pages.yml` on every push to `main`).

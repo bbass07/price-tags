@@ -30,6 +30,7 @@ let view = 'print';
 
 function showView(name) {
   view = name;
+  document.documentElement.classList.toggle('lock', name === 'print');
   for (const v of document.querySelectorAll('.view')) v.hidden = v.id !== `view-${name}`;
   for (const t of document.querySelectorAll('.tab')) t.classList.toggle('is-active', t.dataset.view === VIEW_TAB[name]);
   $('viewTitle').textContent = name === 'pick'
@@ -476,34 +477,11 @@ $('fDelete').addEventListener('click', () => {
   toast('Label deleted');
 });
 
-// ── settings & backup ─────────────────────────────────────────────────────
+// ── settings ──────────────────────────────────────────────────────────────
 
 $('printerNickname').addEventListener('input', (e) => {
   store.updateSettings({ printerNickname: e.target.value });
   paintPrinterState();
-});
-$('btnExport').addEventListener('click', () => {
-  const blob = new Blob([store.exportJSON()], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `price-tags-${new Date().toISOString().slice(0, 10)}.json`;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-});
-
-$('btnImport').addEventListener('click', () => $('importFile').click());
-$('importFile').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  try {
-    const mode = store.labels.length && confirm('Replace your current labels?\n\nOK = replace, Cancel = merge in') ? 'replace' : 'merge';
-    store.importJSON(await file.text(), mode);
-    refreshLists();
-    toast('Backup imported');
-  } catch (err) {
-    toast(err.message, true);
-  }
-  e.target.value = '';
 });
 
 // ── printing ──────────────────────────────────────────────────────────────
@@ -556,7 +534,7 @@ $('btnPrint').addEventListener('click', async () => {
 // nothing. Both carry the same build string, so the mismatch is detectable:
 // when it happens, throw the offline copy away and reload once.
 
-const BUILD = '2026-09-11.11';
+const BUILD = '2026-09-13.1';
 
 function currentBuild() {
   return document.querySelector('meta[name="app-build"]')?.content || '';

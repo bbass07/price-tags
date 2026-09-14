@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="lock">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -7,7 +7,7 @@
 <title>Price Tags</title>
 <!-- Bumped on every deploy. ui.js carries the same string; if the two
      disagree the browser has mixed an old file with a new one. -->
-<meta name="app-build" content="2026-09-11.11">
+<meta name="app-build" content="2026-09-13.1">
 <link rel="stylesheet" href="app.css">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
@@ -89,16 +89,6 @@
     </div>
 
     <div class="card">
-      <h2>Backup</h2>
-      <p class="muted">Your labels live on this device only. Export a copy now and then.</p>
-      <div class="row">
-        <button id="btnExport" class="btn" type="button">Export</button>
-        <button id="btnImport" class="btn btn--ghost" type="button">Import</button>
-        <input id="importFile" type="file" accept="application/json,.json" hidden>
-      </div>
-    </div>
-
-    <div class="card">
       <h2>App version</h2>
       <p class="muted">Build <b id="buildStamp">—</b></p>
       <button id="btnReinstall" class="btn btn--ghost" type="button">Reinstall the app</button>
@@ -158,6 +148,6 @@
 <!-- The build is in the URL so a cached index.html can never be paired with
      a different ui.js: a new page asks for a file name the old cache has
      never seen. -->
-<script type="module" src="js/ui.js?b=2026-09-11.11"></script>
+<script type="module" src="js/ui.js?b=2026-09-13.1"></script>
 </body>
 </html>
