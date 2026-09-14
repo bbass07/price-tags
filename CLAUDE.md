@@ -232,8 +232,19 @@ the instructions, a copy button, and a retest harness in case Bluefy changes it.
 
 ### Open work
 
-- Bulk entry / editing of a large library — adding labels one at a time is fine
-  for a handful, tedious for hundreds. This is the owner's most likely next ask.
+- The library was bulk-loaded on 2026-09-13 from bassfarms.com (the owner's
+  Shopify store): `web/catalog/bassfarms-2026-09-13.json`, 267 labels. `ui.js`
+  fetches it once per device (`CATALOG`, `store.seedLabels`) and records
+  `seededCatalog`, so later edits are never overwritten; a library with more
+  than one label only gains missing names. Rules the owner set: one label per
+  product + size (scents share a price), Neem/Argan add-ons as their own labels,
+  gallons named "Gallon …", no lotion-with-pump labels, no gift/greeting cards,
+  wholesale, bulk, dozen, dispensers or sold-out items (except Hair Therapy,
+  Blueberry Hair Therapy and "Shaving Set", which they still sell). Fall /
+  Sol de / Repel Away / Monster Spray Away / Pumpkin Spice / Medieval copies
+  share the regular label where the price matches. The owner fixes stray
+  prices by hand in the app. A future re-pull needs a new catalog id and a
+  merge plan, not a replace.
 - No barcode support; labels are text only.
 - The app is served from GitHub Pages with `max-age=600`, so a phone can pair a
   new index.html with a ten-minute-old ui.js and simply stop responding. Guards:

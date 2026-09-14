@@ -147,6 +147,27 @@ export class Store extends EventTarget {
     this.save();
   }
 
+  /**
+   * Load a prepared label list once per device. `id` names the list; once it
+   * has been loaded it is never loaded again, so edits made afterwards stick.
+   * A library with at most one label (the owner's test tag) is replaced; a
+   * bigger one is real work and only gains the names it does not have yet.
+   */
+  seedLabels(id, labels) {
+    if (this.data.seededCatalog === id) return false;
+    const now = Date.now();
+    const fresh = labels.map((l) => ({ id: uid(), name: l.name, price: l.price, updatedAt: now }));
+    if (this.data.labels.length <= 1) {
+      this.data.labels = fresh;
+    } else {
+      const have = new Set(this.data.labels.map((l) => l.name.trim().toLowerCase()));
+      this.data.labels.push(...fresh.filter((l) => !have.has(l.name.toLowerCase())));
+    }
+    this.data.seededCatalog = id;
+    this.save();
+    return true;
+  }
+
   /** Case-insensitive search across name and price. */
   search(query) {
     const q = query.trim().toLowerCase();

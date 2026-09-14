@@ -552,7 +552,7 @@ $('btnPrint').addEventListener('click', async () => {
 // nothing. Both carry the same build string, so the mismatch is detectable:
 // when it happens, throw the offline copy away and reload once.
 
-const BUILD = '2026-09-13.5';
+const BUILD = '2026-09-13.6';
 
 function currentBuild() {
   return document.querySelector('meta[name="app-build"]')?.content || '';
@@ -619,8 +619,27 @@ function boot() {
   showView('print');
 }
 
+// The Bass Farms product list, pulled from bassfarms.com and checked against it.
+// Fetched only on a device that has not loaded it yet; if the booth has no
+// signal it simply tries again next time the app opens.
+const CATALOG = 'bassfarms-2026-09-13';
+
+async function seedCatalog() {
+  if (store.data.seededCatalog === CATALOG) return;
+  try {
+    const res = await fetch(new URL(`../catalog/${CATALOG}.json`, import.meta.url));
+    if (!res.ok) return;
+    const { labels } = await res.json();
+    if (store.seedLabels(CATALOG, labels)) {
+      refreshLists();
+      toast(`Loaded ${labels.length} labels.`);
+    }
+  } catch { /* offline — next launch will retry */ }
+}
+
 boot();
 checkBuild();
+seedCatalog();
 
 // Offline support. Harmless where the browser has no service workers.
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
