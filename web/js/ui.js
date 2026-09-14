@@ -59,6 +59,16 @@ $('printerChip').addEventListener('click', () => {
 });
 $('btnBack').addEventListener('click', () => showView('print'));
 
+// The booth menu fits the screen, but iOS still rubber-bands a page that has
+// nothing to scroll, and CSS cannot stop that inside the BLE browsers. Refusing
+// the drag itself does. Taps are not drags, so the buttons still work. If a
+// long list of booths ever overflows, the drag is let through so it scrolls.
+document.addEventListener('touchmove', (e) => {
+  if (view !== 'print') return;
+  const main = document.querySelector('main');
+  if (main.scrollHeight <= main.clientHeight) e.preventDefault();
+}, { passive: false });
+
 // ── printer ───────────────────────────────────────────────────────────────
 
 
@@ -534,7 +544,7 @@ $('btnPrint').addEventListener('click', async () => {
 // nothing. Both carry the same build string, so the mismatch is detectable:
 // when it happens, throw the offline copy away and reload once.
 
-const BUILD = '2026-09-13.1';
+const BUILD = '2026-09-13.2';
 
 function currentBuild() {
   return document.querySelector('meta[name="app-build"]')?.content || '';

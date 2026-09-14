@@ -129,6 +129,9 @@ Working and verified:
   `<html>` for the `print` view only, which pins the body to the window so the
   bars and tiles stop shifting and bouncing under a thumb. Every other screen
   scrolls normally. Do not go back to sizing the view with a `100dvh - Npx` guess.
+  CSS alone was not enough on the phone: BLE Link still rubber-banded the page.
+  A non-passive `touchmove` listener cancels drags on that view (unless the
+  booth list overflows), which is what actually stops it.
 
 Live at **https://bbass07.github.io/price-tags/** (repo `bbass07/price-tags`,
 deployed from `web/` by `.github/workflows/pages.yml` on every push to `main`).
