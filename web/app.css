@@ -147,7 +147,7 @@ main { padding: 16px; max-width: 720px; margin: 0 auto; }
   font-size: clamp(26px, 8vw, 40px); font-weight: 700; line-height: 1.1;
   overflow-wrap: anywhere;
 }
-.loccard__booth { font-size: 17px; color: var(--muted); }
+.loccard__booth { font-size: 22px; color: var(--muted); }
 .loccard:active { background: var(--accent); border-color: var(--accent); }
 .loccard:active .loccard__name { color: var(--accent-ink); }
 .loccard:active .loccard__booth { color: var(--accent-ink); }
