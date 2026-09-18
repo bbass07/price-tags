@@ -147,10 +147,15 @@ main { padding: 16px; max-width: 720px; margin: 0 auto; }
    booth. It caps lower than a bare number could and wraps, because names run
    long where "7" never did. */
 .loccard__name {
-  font-size: clamp(26px, 8vw, 40px); font-weight: 700; line-height: 1.1;
+  /* Stepped down a notch on 2026-09-18: at 8vw a long location name dropped
+     its last letter onto a second row on the owner's phone. */
+  font-size: clamp(24px, 7vw, 36px); font-weight: 700; line-height: 1.1;
   overflow-wrap: anywhere;
 }
 .loccard__booth { font-size: 22px; color: var(--muted); }
+/* "Name & price only" is a sentence, not a number, so it does not want the
+   size a booth number is given. */
+.loccard__booth--none { font-size: 16px; }
 .loccard:active { background: var(--accent); border-color: var(--accent); }
 .loccard:active .loccard__name { color: var(--accent-ink); }
 .loccard:active .loccard__booth { color: var(--accent-ink); }

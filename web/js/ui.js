@@ -239,8 +239,12 @@ function paintLocations() {
     b.type = 'button';
     b.className = 'loccard';
     b.innerHTML = `<span class="loccard__name">${escapeHtml(loc.name)}</span>` +
-      // A booth saved as "#7" must not read "##7".
-      `<span class="loccard__booth">Booth #${escapeHtml(String(loc.booth).replace(/^#+/, ''))}</span>`;
+      // A booth saved as "#7" must not read "##7". A location with no booth
+      // number says what its tags look like instead, since that is the whole
+      // difference between it and the others.
+      (loc.booth
+        ? `<span class="loccard__booth">Booth #${escapeHtml(String(loc.booth).replace(/^#+/, ''))}</span>`
+        : '<span class="loccard__booth loccard__booth--none">Name &amp; price only</span>');
     b.addEventListener('click', () => openLocation(loc.id));
     cards.appendChild(b);
   }
@@ -251,7 +255,7 @@ function paintLocations() {
     const li = document.createElement('li');
     li.className = 'item';
     li.innerHTML = `<div class="item__main"><div class="item__name">${escapeHtml(loc.name)}</div>
-      <div class="item__sub">Booth ${escapeHtml(loc.booth)}</div></div>`;
+      <div class="item__sub">${loc.booth ? `Booth ${escapeHtml(loc.booth)}` : 'No booth number — two-line tags'}</div></div>`;
     const del = document.createElement('button');
     del.className = 'btn btn--danger';
     del.type = 'button';
@@ -267,7 +271,7 @@ function paintLocations() {
 $('addLoc').addEventListener('click', () => {
   const name = $('newLocName').value.trim();
   const booth = $('newLocBooth').value.trim();
-  if (!name || !booth) return toast('Give the location a name and a booth number', true);
+  if (!name) return toast('Give the location a name', true);
   store.addLocation({ name, booth });
   $('newLocName').value = '';
   $('newLocBooth').value = '';
@@ -507,7 +511,8 @@ $('printerNickname').addEventListener('input', (e) => {
 function paintQueueBar() {
   const total = [...queue.values()].reduce((a, b) => a + b, 0);
   $('queueCount').textContent = String(total);
-  $('queueLoc').textContent = store.activeLocation ? `Booth ${store.activeLocation.booth}` : 'no location';
+  const loc = store.activeLocation;
+  $('queueLoc').textContent = loc ? (loc.booth ? `Booth ${loc.booth}` : loc.name) : 'no location';
   $('printBar').hidden = total === 0 || view !== 'pick';
 }
 
@@ -552,7 +557,7 @@ $('btnPrint').addEventListener('click', async () => {
 // nothing. Both carry the same build string, so the mismatch is detectable:
 // when it happens, throw the offline copy away and reload once.
 
-const BUILD = '2026-09-13.6';
+const BUILD = '2026-09-18.1';
 
 function currentBuild() {
   return document.querySelector('meta[name="app-build"]')?.content || '';
@@ -623,6 +628,10 @@ function boot() {
 // Fetched only on a device that has not loaded it yet; if the booth has no
 // signal it simply tries again next time the app opens.
 const CATALOG = 'bassfarms-2026-09-13';
+
+// The farmers' market has no booth number, so its tags print name and price
+// only. Added once; if it is removed it stays removed.
+store.seedLocation("farmers-market-2026-09-18", { name: "Farmer's Market", booth: '' });
 
 async function seedCatalog() {
   if (store.data.seededCatalog === CATALOG) return;

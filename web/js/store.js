@@ -101,8 +101,12 @@ export class Store extends EventTarget {
     this.save();
   }
 
+  /**
+   * A location with a blank `booth` prints a two-line tag — name and price
+   * only. That is the farmers' market, where no booth number exists to print.
+   */
   addLocation({ name, booth }) {
-    const loc = { id: uid(), name: name.trim(), booth: String(booth).trim() };
+    const loc = { id: uid(), name: name.trim(), booth: String(booth ?? '').trim() };
     this.data.locations.push(loc);
     if (!this.data.activeLocationId) this.data.activeLocationId = loc.id;
     this.save();
@@ -145,6 +149,21 @@ export class Store extends EventTarget {
   removeLabel(id) {
     this.data.labels = this.data.labels.filter((l) => l.id !== id);
     this.save();
+  }
+
+  /**
+   * Add a location once per device, the way `seedLabels` adds labels: named by
+   * `id`, never added twice, and skipped entirely if a location of that name
+   * already exists, so a removed one stays removed.
+   */
+  seedLocation(id, { name, booth = '' }) {
+    if (this.data.seededLocations?.includes(id)) return false;
+    this.data.seededLocations = [...(this.data.seededLocations || []), id];
+    const taken = this.data.locations.some((l) => l.name.trim().toLowerCase() === name.trim().toLowerCase());
+    if (!taken) this.data.locations.push({ id: uid(), name: name.trim(), booth: String(booth).trim() });
+    if (!this.data.activeLocationId) this.data.activeLocationId = this.data.locations[0]?.id || null;
+    this.save();
+    return !taken;
   }
 
   /**

@@ -91,9 +91,15 @@ reference/    cloned protocol documentation (not our code)
 
 Working and verified:
 - BLE discovery, connect, status polling, printer identity.
-- Label rendering at 240 x 120 dots: booth / item / price as three plain black
-  lines of equal height, auto-fitting text. Every label has exactly those three
-  lines — no inverted banner, no second line, no per-label layout. `store.js` strips the old `note` field from saved
+- Label rendering at 240 x 120 dots: booth / item / price as plain black lines
+  of equal height, auto-fitting text — no inverted banner, no per-label layout.
+  A location whose `booth` is blank prints **two** lines instead, name and
+  price, each taking the height the booth line would have had (so they print
+  noticeably bigger). That is the only shape choice, it comes from the
+  location, and `labelLayout()` decides it — nothing else branches on it.
+  The farmers' market is such a location, added once per device by
+  `store.seedLocation()` from `ui.js` (2026-09-18); the Setup form leaves the
+  booth box optional so more can be added by hand. `store.js` strips the old `note` field from saved
   records and from imported backups on load, so nothing carries it forward.
 - The editor *is* the label: `render.js` exports `labelLayout()`, and `ui.js`
   places the two inputs over a tag-shaped card using that same geometry scaled

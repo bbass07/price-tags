@@ -7,7 +7,7 @@
 <title>Price Tags</title>
 <!-- Bumped on every deploy. ui.js carries the same string; if the two
      disagree the browser has mixed an old file with a new one. -->
-<meta name="app-build" content="2026-09-13.6">
+<meta name="app-build" content="2026-09-18.1">
 <link rel="stylesheet" href="app.css">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
@@ -31,7 +31,7 @@
   <!-- ──────────── Print, step 1: which booth? ──────────────── -->
   <section id="view-print" class="view view--fill">
     <div class="loccards" id="locCards"></div>
-    <p id="locEmpty" class="empty" hidden>No booths set up yet.<br>Add them on the <b>Setup</b> tab and they will appear here.</p>
+    <p id="locEmpty" class="empty" hidden>No locations set up yet.<br>Add them on the <b>Setup</b> tab and they will appear here.</p>
   </section>
 
   <!-- ──────────── Print, step 2: how many of what? ─────────── -->
@@ -79,11 +79,13 @@
 
     <div class="card">
       <h2>Locations</h2>
-      <p class="muted">Each location has its own booth number. The booth number is printed at the top of every label.</p>
+      <p class="muted">Each location has its own booth number, printed at the top of every label.
+        Leave the booth box empty for a place with no booth number, like the farmers' market —
+        its tags print the item name and price only, both bigger.</p>
       <ul id="locList" class="list list--tight"></ul>
       <div class="row">
         <input id="newLocName" class="input" placeholder="Location name" autocomplete="off">
-        <input id="newLocBooth" class="input input--short" placeholder="Booth #" autocomplete="off">
+        <input id="newLocBooth" class="input input--short" placeholder="Booth # (optional)" autocomplete="off">
         <button id="addLoc" class="btn btn--primary" type="button">Add</button>
       </div>
     </div>
@@ -132,7 +134,8 @@
       </div>
     </div>
     <p class="tag__cap">This is the real 30 &times; 15 mm label. The booth number
-      comes from the location you pick on the Print screen, so it is not typed here.</p>
+      comes from the location you pick on the Print screen, so it is not typed here.
+      A location with no booth number prints just these two lines, bigger.</p>
 
     <div class="sheet__actions">
       <button id="fDelete" class="btn btn--danger" type="button" hidden>Delete</button>
@@ -148,6 +151,6 @@
 <!-- The build is in the URL so a cached index.html can never be paired with
      a different ui.js: a new page asks for a file name the old cache has
      never seen. -->
-<script type="module" src="js/ui.js?b=2026-09-13.6"></script>
+<script type="module" src="js/ui.js?b=2026-09-18.1"></script>
 </body>
 </html>

@@ -85,12 +85,13 @@ function drawLines(ctx, lines, size, lineHeight, box, align = 'center') {
 }
 
 /**
- * Where the three lines of a tag sit, in printer dots.
+ * Where the lines of a tag sit, in printer dots.
  *
- * Every tag is booth / item name / price, in that order, always — three plain
- * black lines of equal height, so the tag never changes shape on you. The
- * booth line keeps its strip of height whether or not there is a booth to put
- * in it.
+ * A tag is booth / item name / price, in that order — plain black lines of
+ * equal height, so the tag never changes shape on you. A location with no
+ * booth number (the farmers' market) prints two lines instead of three: the
+ * booth strip is not left empty, its height goes to the name and the price,
+ * which therefore print bigger.
  *
  * The geometry is worked out once here and used twice: `renderLabel` paints
  * from it, and the editor sizes its on-screen form from it so what you type is
@@ -114,23 +115,28 @@ export function labelLayout(ctx, { booth = '', name = '', price = '' } = {}, opt
   const pad = Math.max(4, Math.round(width * 0.03));
   const gap = Math.round(pad / 2);
 
-  // Three identical rows. Short text fills its row, so in practice all three
-  // lines come out the same size; only a long name shrinks to fit its width.
-  const rowH = Math.floor((usableH - gap * 2) / 3);
+  // Identical rows — three with a booth number, two without. Short text fills
+  // its row, so in practice every line comes out the same size; only a long
+  // name shrinks to fit its width.
+  const boothText = booth ? `BOOTH ${booth}` : '';
+  const rows = boothText ? 3 : 2;
+  const rowH = Math.floor((usableH - gap * (rows - 1)) / rows);
   const rowW = width - pad * 2;
   const row = (i) => ({ x: pad, y: top + i * (rowH + gap), w: rowW, h: rowH });
 
   const boothBlock = {
-    box: row(0),
+    // With no booth number the block still exists, flat and empty at the top,
+    // so callers can place it without asking which shape of tag this is.
+    box: boothText ? row(0) : { x: pad, y: top, w: rowW, h: 0 },
     weight: '700',
-    text: booth ? `BOOTH ${booth}` : '',
+    text: boothText,
   };
   boothBlock.fit = fitText(ctx, boothBlock.text, boothBlock.box, {
     weight: '700', max: rowH, min: 9, maxLines: 1,
   });
 
   const nameBlock = {
-    box: row(1),
+    box: row(boothText ? 1 : 0),
     weight: '700',
     text: String(name),
   };
@@ -139,7 +145,7 @@ export function labelLayout(ctx, { booth = '', name = '', price = '' } = {}, opt
   });
 
   const priceBlock = {
-    box: row(2),
+    box: row(boothText ? 2 : 1),
     weight: '700',
     text: String(price),
   };
