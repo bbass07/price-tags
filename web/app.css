@@ -276,3 +276,14 @@ textarea.tag__input { resize: none; display: block; }
   background: #14181d; color: #fff; font-size: 14px; box-shadow: 0 6px 24px rgba(0,0,0,.28);
 }
 .toast--bad { background: var(--danger); }
+
+/* Boot failure notice — see index.html. It sits over everything, because the
+   screen behind it is empty and there is nothing else to read. */
+.bootfail {
+  position: fixed; inset: 0; z-index: 50;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px; padding: 28px; text-align: center;
+  background: var(--bg); color: var(--text);
+}
+.bootfail[hidden] { display: none; }
+.bootfail .btn { flex: 0 0 auto; width: 100%; max-width: 320px; }

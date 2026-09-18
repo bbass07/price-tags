@@ -7,7 +7,7 @@
 <title>Price Tags</title>
 <!-- Bumped on every deploy. ui.js carries the same string; if the two
      disagree the browser has mixed an old file with a new one. -->
-<meta name="app-build" content="2026-09-18.1">
+<meta name="app-build" content="2026-09-18.2">
 <link rel="stylesheet" href="app.css">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
@@ -148,9 +148,42 @@
 
 <div id="toast" class="toast" hidden></div>
 
+<!-- Shown only when the app's own script never runs. Reinstalling throws the
+     offline copy away, so a dropped connection straight afterwards leaves a
+     page with nothing to draw — which looks like a broken app rather than a
+     missing download. This says which it is, and the button fetches it again.
+     Plain HTML and one inline script, because the thing that failed is exactly
+     the file everything else depends on. -->
+<div id="bootFail" class="bootfail" hidden>
+  <p><b>The app did not finish loading.</b></p>
+  <p>Your labels are safe on this phone. This needs signal for a moment to
+    download the app again.</p>
+  <button id="btnBootRetry" class="btn btn--primary btn--wide" type="button">Try again</button>
+</div>
+
 <!-- The build is in the URL so a cached index.html can never be paired with
      a different ui.js: a new page asks for a file name the old cache has
      never seen. -->
-<script type="module" src="js/ui.js?b=2026-09-18.1"></script>
+<script type="module" src="js/ui.js?b=2026-09-18.2"></script>
+<script>
+  // `window.app` is the last thing ui.js does, so it is the proof the app is
+  // running. Keep watching after the warning appears: a slow download that
+  // lands late should clear it rather than leave a scary message on screen.
+  (function () {
+    var box = document.getElementById('bootFail');
+    var waited = 0;
+    var timer = setInterval(function () {
+      if (window.app) { box.hidden = true; clearInterval(timer); return; }
+      waited += 1000;
+      if (waited >= 8000) box.hidden = false;
+      if (waited >= 60000) clearInterval(timer);
+    }, 1000);
+    document.getElementById('btnBootRetry').addEventListener('click', function () {
+      var url = new URL(location.href);
+      url.searchParams.set('fresh', Date.now().toString(36));
+      location.replace(url.toString());
+    });
+  })();
+</script>
 </body>
 </html>

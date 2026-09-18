@@ -557,7 +557,7 @@ $('btnPrint').addEventListener('click', async () => {
 // nothing. Both carry the same build string, so the mismatch is detectable:
 // when it happens, throw the offline copy away and reload once.
 
-const BUILD = '2026-09-18.1';
+const BUILD = '2026-09-18.2';
 
 function currentBuild() {
   return document.querySelector('meta[name="app-build"]')?.content || '';
@@ -627,21 +627,41 @@ function boot() {
 // The Bass Farms product list, pulled from bassfarms.com and checked against it.
 // Fetched only on a device that has not loaded it yet; if the booth has no
 // signal it simply tries again next time the app opens.
-const CATALOG = 'bassfarms-2026-09-13';
+const CATALOG = 'bassfarms-2026-09-18';
+// Changes to a library that already exists: the Neem and Argan versions are
+// gone, and long names were shortened. Applied once, by name, so anything
+// edited by hand survives.
+const REVISION = 'revision-2026-09-18';
 
 // The farmers' market has no booth number, so its tags print name and price
 // only. Added once; if it is removed it stays removed.
 store.seedLocation("farmers-market-2026-09-18", { name: "Farmer's Market", booth: '' });
 
+async function catalogJSON(name) {
+  const res = await fetch(new URL(`../catalog/${name}.json`, import.meta.url));
+  if (!res.ok) throw new Error(`${name}: ${res.status}`);
+  return res.json();
+}
+
 async function seedCatalog() {
-  if (store.data.seededCatalog === CATALOG) return;
   try {
-    const res = await fetch(new URL(`../catalog/${CATALOG}.json`, import.meta.url));
-    if (!res.ok) return;
-    const { labels } = await res.json();
-    if (store.seedLabels(CATALOG, labels)) {
-      refreshLists();
-      toast(`Loaded ${labels.length} labels.`);
+    if (!store.data.seededCatalog) {
+      const { labels } = await catalogJSON(CATALOG);
+      if (store.seedLabels(CATALOG, labels)) {
+        refreshLists();
+        toast(`Loaded ${labels.length} labels.`);
+      }
+      return;                       // a fresh list is already the revised one
+    }
+    if (store.data.revisions?.includes(REVISION)) return;
+    const { id, renames, removes } = await catalogJSON(REVISION);
+    const done = store.reviseLabels(id, { renames, removes });
+    if (!done) return;
+    refreshLists();
+    // A revision that changed nothing — a library already holding the new
+    // names — has nothing worth saying.
+    if (done.renamed || done.removed) {
+      toast(`Label list updated: ${done.renamed} renamed, ${done.removed} removed.`);
     }
   } catch { /* offline — next launch will retry */ }
 }

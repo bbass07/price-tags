@@ -173,7 +173,10 @@ export class Store extends EventTarget {
    * bigger one is real work and only gains the names it does not have yet.
    */
   seedLabels(id, labels) {
-    if (this.data.seededCatalog === id) return false;
+    // Seeded once ever, not once per list: a device that already has a library
+    // gets later changes through `reviseLabels`, which renames what is there
+    // instead of pouring a second copy of the catalogue over the top.
+    if (this.data.seededCatalog) return false;
     const now = Date.now();
     const fresh = labels.map((l) => ({ id: uid(), name: l.name, price: l.price, updatedAt: now }));
     if (this.data.labels.length <= 1) {
@@ -185,6 +188,31 @@ export class Store extends EventTarget {
     this.data.seededCatalog = id;
     this.save();
     return true;
+  }
+
+  /**
+   * Change labels the catalogue already put here: `renames` is old name -> new
+   * name, `removes` is a list of names to drop. Matching is by exact name, so
+   * anything the owner has renamed or re-priced by hand is left alone. Applied
+   * once per `id`.
+   */
+  reviseLabels(id, { renames = {}, removes = [] }) {
+    if (this.data.revisions?.includes(id)) return null;
+    const gone = new Set(removes);
+    const before = this.data.labels.length;
+    this.data.labels = this.data.labels.filter((l) => !gone.has(l.name));
+    let renamed = 0;
+    for (const label of this.data.labels) {
+      const to = renames[label.name];
+      // Never rename onto a name that is already in the library — that would
+      // leave two rows reading the same thing.
+      if (!to || this.data.labels.some((l) => l !== label && l.name === to)) continue;
+      label.name = to;
+      renamed += 1;
+    }
+    this.data.revisions = [...(this.data.revisions || []), id];
+    this.save();
+    return { removed: before - this.data.labels.length, renamed };
   }
 
   /** Case-insensitive search across name and price. */

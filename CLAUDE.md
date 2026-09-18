@@ -131,6 +131,13 @@ Working and verified:
   names its booth in the header title only; the "Printing for Booth _ / Change"
   strip above the list was removed on 2026-09-11. The way back to the booth menu
   is the header's back arrow or the Print tab, both of which already existed.
+- If `ui.js` never runs — a reinstall throws the offline copy away, so one
+  dropped connection afterwards leaves a page with nothing to draw — the
+  `#bootFail` notice in `index.html` says so and offers a reload, instead of
+  the blank screen the owner hit on 2026-09-18. It is plain markup and one
+  inline script on purpose: the thing that failed is the file everything else
+  depends on. It watches for `window.app` and hides itself if a slow download
+  lands late.
 - Both Print screens are pinned (2026-09-13): the booth menu cannot move at
   all, and on the label list only the area between the bars scrolls. How, and
   how to do it for another screen, is under "Making a screen unscrollable".
@@ -239,18 +246,23 @@ the instructions, a copy button, and a retest harness in case Bluefy changes it.
 ### Open work
 
 - The library was bulk-loaded on 2026-09-13 from bassfarms.com (the owner's
-  Shopify store): `web/catalog/bassfarms-2026-09-13.json`, 267 labels. `ui.js`
-  fetches it once per device (`CATALOG`, `store.seedLabels`) and records
-  `seededCatalog`, so later edits are never overwritten; a library with more
-  than one label only gains missing names. Rules the owner set: one label per
-  product + size (scents share a price), Neem/Argan add-ons as their own labels,
-  gallons named "Gallon …", no lotion-with-pump labels, no gift/greeting cards,
+  Shopify store) and revised on 2026-09-18: `web/catalog/bassfarms-2026-09-18.json`,
+  **194 labels**, is what a new device gets. Rules the owner set: one label per
+  product + size (scents share a price), gallons named "Gallon …", **no
+  Neem/Argan versions** and no lotion-with-pump labels, no gift/greeting cards,
   wholesale, bulk, dozen, dispensers or sold-out items (except Hair Therapy,
-  Blueberry Hair Therapy and "Shaving Set", which they still sell). Fall /
-  Sol de / Repel Away / Monster Spray Away / Pumpkin Spice / Medieval copies
-  share the regular label where the price matches. The owner fixes stray
-  prices by hand in the app. A future re-pull needs a new catalog id and a
-  merge plan, not a replace.
+  BB Hair Therapy and "Shaving Set", which they still sell). Fall / Sol de /
+  Repel Away / Monster Spray Away / Pumpkin Spice / Medieval copies share the
+  regular label where the price matches. Names are kept short because a long
+  one prints small — "Blueberry" is "BB", and see the rename map for the rest.
+- **Changing that library later is a revision, never a re-seed.**
+  `store.seedLabels()` runs once ever (it checks `seededCatalog` is unset), so
+  a second catalogue file would be ignored on the owner's phone. Changes go in
+  `web/catalog/revision-<date>.json` — `{ id, renames: {old: new}, removes: [] }`
+  — applied by `store.reviseLabels()` once per `id` (recorded in `revisions`)
+  and matched by exact name, so a label the owner renamed or re-priced by hand
+  is left alone. `ui.js` holds `CATALOG` and `REVISION`; add a new revision
+  file and point `REVISION` at it.
 - No barcode support; labels are text only.
 - The app is served from GitHub Pages with `max-age=600`, so a phone can pair a
   new index.html with a ten-minute-old ui.js and simply stop responding. Guards:
