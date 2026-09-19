@@ -9,9 +9,10 @@
 // old ui.js beside it, which is a broken app, not an old one. Every fetch here
 // is therefore revalidated against the server; a 304 costs almost nothing.
 
-const CACHE = 'pricetags-v33';
+const CACHE = 'pricetags-v34';
 const SHELL = [
   './', './index.html', './app.css', './manifest.webmanifest', './home-screen.html', './landed.html',
+  './fix.html',
   './js/ui.js', './js/store.js', './js/render.js', './js/printer.js',
   './js/ble.js', './js/frames.js', './js/bitmap.js', './js/job.js', './js/lzma.js',
   './vendor/lzma.js',

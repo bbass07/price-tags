@@ -131,6 +131,15 @@ Working and verified:
   names its booth in the header title only; the "Printing for Booth _ / Change"
   strip above the list was removed on 2026-09-11. The way back to the booth menu
   is the header's back arrow or the Print tab, both of which already existed.
+- `web/fix.html` is the rescue page (2026-09-18), for a phone stuck on an old
+  copy of the app — one of the owner's two phones was, and nothing inside the
+  app could help, because the stale file *is* the app. It is its own document,
+  imports `store.js` with a cache-busting query, and prints what that phone
+  really has: label count, which revisions are applied, the build the server
+  serves now versus the build the phone loads, cache names, service-worker
+  count and the address. Two buttons: apply the catalogue and revisions
+  straight to localStorage, and unregister/clear/reload. Linked from Setup.
+  Keep its `CATALOG` / `REVISIONS` lists in step with `ui.js`.
 - If `ui.js` never runs — a reinstall throws the offline copy away, so one
   dropped connection afterwards leaves a page with nothing to draw — the
   `#bootFail` notice in `index.html` says so and offers a reload, instead of

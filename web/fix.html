@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fix this phone — Price Tags</title>
+<link rel="stylesheet" href="app.css">
+<style>
+  main { max-width: 620px; padding: 16px 16px 60px; margin: 0 auto; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 15px; }
+  .kv dt { color: var(--muted); }
+  .kv dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+  .ok { color: #2e9e4f; } .bad { color: var(--danger); }
+  .card .btn { width: 100%; margin-top: 10px; }
+  pre { white-space: pre-wrap; font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <div class="card">
+    <h2>What this phone has</h2>
+    <dl class="kv" id="report"><dt>Checking…</dt><dd></dd></dl>
+  </div>
+
+  <div class="card">
+    <h2>Update the labels</h2>
+    <p class="muted">Loads the current label list straight from the website, without
+      going through the app. Prices or names you changed yourself are kept.</p>
+    <button id="btnFix" class="btn btn--primary" type="button">Update the labels now</button>
+    <p id="fixOut" class="muted"></p>
+  </div>
+
+  <div class="card">
+    <h2>Throw away the offline copy</h2>
+    <p class="muted">Deletes this phone's saved copy of the app and downloads it again.
+      Your labels are not touched. Needs signal.</p>
+    <button id="btnWipe" class="btn btn--ghost" type="button">Clear and reload the app</button>
+  </div>
+
+  <p class="muted"><a href="./">← open Price Tags</a></p>
+</main>
+
+<script type="module">
+// fix.html — a rescue page, separate from the app on purpose.
+//
+// If a phone is stuck on an old copy of ui.js, nothing inside the app can fix
+// it, because the stale file is the app. This page is its own document and
+// imports the store with a cache-busting query, so the code that runs here is
+// always the current one.
+const v = Date.now();
+const { Store } = await import(`./js/store.js?v=${v}`);
+const store = new Store();
+
+const CATALOG = 'bassfarms-2026-09-18';
+const REVISIONS = ['revision-2026-09-18', 'revision-2026-09-18b', 'revision-2026-09-18c', 'revision-2026-09-18d'];
+
+const $ = (id) => document.getElementById(id);
+const row = (k, val, good) => `<dt>${k}</dt><dd class="${good === undefined ? '' : good ? 'ok' : 'bad'}">${val}</dd>`;
+
+async function report() {
+  // The build the server has right now, fetched past every cache.
+  let served = '(could not check — no signal?)';
+  try {
+    const html = await (await fetch(`./index.html?v=${v}`, { cache: 'no-store' })).text();
+    served = html.match(/name="app-build" content="([^"]+)"/)?.[1] || '(not stamped)';
+  } catch { /* leave the message */ }
+
+  let installed = '(app not opened on this phone yet)';
+  try {
+    const html = await (await fetch('./index.html')).text();
+    installed = html.match(/name="app-build" content="([^"]+)"/)?.[1] || '(not stamped)';
+  } catch { /* leave the message */ }
+
+  const workers = 'serviceWorker' in navigator
+    ? (await navigator.serviceWorker.getRegistrations()).length : 0;
+  const cacheNames = window.caches ? await caches.keys() : [];
+  const labels = store.labels;
+
+  $('report').innerHTML = [
+    row('Labels on this phone', labels.length),
+    row('Updates applied', (store.data.revisions || []).length + ' of ' + REVISIONS.length,
+        (store.data.revisions || []).length === REVISIONS.length),
+    row('Newest build on the website', served),
+    row('Build this phone loads', installed, installed === served),
+    row('Offline copies stored', cacheNames.length ? cacheNames.join(', ') : 'none'),
+    row('Background helpers', workers),
+    row('Address', location.href),
+  ].join('');
+}
+
+$('btnFix').addEventListener('click', async () => {
+  const btn = $('btnFix');
+  btn.disabled = true;
+  try {
+    const get = async (name) => (await fetch(`./catalog/${name}.json?v=${Date.now()}`, { cache: 'no-store' })).json();
+    let renamed = 0, removed = 0, added = 0;
+    if (!store.data.seededCatalog) {
+      const { labels } = await get(CATALOG);
+      store.seedLabels(CATALOG, labels);
+      added = store.labels.length;
+    }
+    for (const name of REVISIONS) {
+      if (store.data.revisions?.includes(name)) continue;
+      const { id, renames, removes, adds } = await get(name);
+      const done = store.reviseLabels(id, { renames, removes, adds });
+      if (!done) continue;
+      renamed += done.renamed; removed += done.removed; added += done.added;
+    }
+    $('fixOut').textContent = `Done — ${store.labels.length} labels (${renamed} renamed, ${removed} removed, ${added} added).`;
+    await report();
+  } catch (err) {
+    $('fixOut').textContent = `Could not update: ${err.message}. Check the signal and try again.`;
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+$('btnWipe').addEventListener('click', async () => {
+  $('btnWipe').disabled = true;
+  try {
+    if ('serviceWorker' in navigator) {
+      for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister();
+    }
+    if (window.caches) for (const k of await caches.keys()) await caches.delete(k);
+  } catch { /* nothing here is worth blocking the reload */ }
+  location.replace(`./?fresh=${Date.now().toString(36)}`);
+});
+
+await report();
+</script>
+</body>
+</html>

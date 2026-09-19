@@ -557,7 +557,7 @@ $('btnPrint').addEventListener('click', async () => {
 // nothing. Both carry the same build string, so the mismatch is detectable:
 // when it happens, throw the offline copy away and reload once.
 
-const BUILD = '2026-09-18.5';
+const BUILD = '2026-09-18.6';
 
 function currentBuild() {
   return document.querySelector('meta[name="app-build"]')?.content || '';
