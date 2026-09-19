@@ -557,7 +557,7 @@ $('btnPrint').addEventListener('click', async () => {
 // nothing. Both carry the same build string, so the mismatch is detectable:
 // when it happens, throw the offline copy away and reload once.
 
-const BUILD = '2026-09-18.2';
+const BUILD = '2026-09-18.3';
 
 function currentBuild() {
   return document.querySelector('meta[name="app-build"]')?.content || '';
@@ -631,7 +631,8 @@ const CATALOG = 'bassfarms-2026-09-18';
 // Changes to a library that already exists: the Neem and Argan versions are
 // gone, and long names were shortened. Applied once, by name, so anything
 // edited by hand survives.
-const REVISION = 'revision-2026-09-18';
+// Applied in order, each once; a new one is a new file added to this list.
+const REVISIONS = ['revision-2026-09-18', 'revision-2026-09-18b'];
 
 // The farmers' market has no booth number, so its tags print name and price
 // only. Added once; if it is removed it stays removed.
@@ -653,16 +654,19 @@ async function seedCatalog() {
       }
       return;                       // a fresh list is already the revised one
     }
-    if (store.data.revisions?.includes(REVISION)) return;
-    const { id, renames, removes } = await catalogJSON(REVISION);
-    const done = store.reviseLabels(id, { renames, removes });
-    if (!done) return;
+    let renamed = 0, removed = 0;
+    for (const name of REVISIONS) {
+      if (store.data.revisions?.includes(name)) continue;
+      const { id, renames, removes } = await catalogJSON(name);
+      const done = store.reviseLabels(id, { renames, removes });
+      if (!done) continue;
+      renamed += done.renamed;
+      removed += done.removed;
+    }
     refreshLists();
     // A revision that changed nothing — a library already holding the new
     // names — has nothing worth saying.
-    if (done.renamed || done.removed) {
-      toast(`Label list updated: ${done.renamed} renamed, ${done.removed} removed.`);
-    }
+    if (renamed || removed) toast(`Label list updated: ${renamed} renamed, ${removed} removed.`);
   } catch { /* offline — next launch will retry */ }
 }
 

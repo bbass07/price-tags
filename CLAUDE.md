@@ -261,8 +261,9 @@ the instructions, a copy button, and a retest harness in case Bluefy changes it.
   `web/catalog/revision-<date>.json` — `{ id, renames: {old: new}, removes: [] }`
   — applied by `store.reviseLabels()` once per `id` (recorded in `revisions`)
   and matched by exact name, so a label the owner renamed or re-priced by hand
-  is left alone. `ui.js` holds `CATALOG` and `REVISION`; add a new revision
-  file and point `REVISION` at it.
+  is left alone. `ui.js` holds `CATALOG` and `REVISIONS`, a list applied in
+  order; a further change is a new file appended to that list, never an edit to
+  a revision already shipped — a phone that applied it would never see the edit.
 - No barcode support; labels are text only.
 - The app is served from GitHub Pages with `max-age=600`, so a phone can pair a
   new index.html with a ten-minute-old ui.js and simply stop responding. Guards:
