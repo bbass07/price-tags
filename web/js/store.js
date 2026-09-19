@@ -220,6 +220,20 @@ export class Store extends EventTarget {
     return { removed: before - (this.data.labels.length - fresh.length), renamed, added: fresh.length };
   }
 
+  /**
+   * Add any of `labels` whose name is not here already, leaving everything
+   * else alone. The repair for a phone that missed an update: it can only add,
+   * so a hand-edited price or name is never touched.
+   */
+  addMissingLabels(labels) {
+    const have = new Set(this.data.labels.map((l) => l.name.trim().toLowerCase()));
+    const missing = labels.filter((l) => !have.has(l.name.trim().toLowerCase()));
+    const now = Date.now();
+    this.data.labels.push(...missing.map((l) => ({ id: uid(), name: l.name, price: l.price, updatedAt: now })));
+    if (missing.length) this.save();
+    return missing.map((l) => l.name);
+  }
+
   /** Case-insensitive search across name and price. */
   search(query) {
     const q = query.trim().toLowerCase();

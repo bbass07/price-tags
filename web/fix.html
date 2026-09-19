@@ -31,6 +31,14 @@
   </div>
 
   <div class="card">
+    <h2>Add anything missing</h2>
+    <p class="muted">Compares this phone against the list on the website and adds only
+      what is not here. Nothing already on the phone is changed or removed.</p>
+    <p id="missingOut" class="muted">Checking…</p>
+    <button id="btnMissing" class="btn btn--primary" type="button" hidden>Add the missing labels</button>
+  </div>
+
+  <div class="card">
     <h2>Throw away the offline copy</h2>
     <p class="muted">Deletes this phone's saved copy of the app and downloads it again.
       Your labels are not touched. Needs signal.</p>
@@ -56,6 +64,24 @@ const REVISIONS = ['revision-2026-09-18', 'revision-2026-09-18b', 'revision-2026
 
 const $ = (id) => document.getElementById(id);
 const row = (k, val, good) => `<dt>${k}</dt><dd class="${good === undefined ? '' : good ? 'ok' : 'bad'}">${val}</dd>`;
+
+let catalogLabels = null;
+
+/** What the website's list has that this phone does not. */
+async function checkMissing() {
+  try {
+    catalogLabels = (await get(CATALOG)).labels;
+  } catch {
+    $('missingOut').textContent = 'Could not check — no signal?';
+    return;
+  }
+  const have = new Set(store.labels.map((l) => l.name.trim().toLowerCase()));
+  const missing = catalogLabels.filter((l) => !have.has(l.name.trim().toLowerCase()));
+  $('btnMissing').hidden = missing.length === 0;
+  $('missingOut').textContent = missing.length
+    ? `${missing.length} missing: ${missing.slice(0, 6).map((l) => l.name).join(', ')}${missing.length > 6 ? '…' : ''}`
+    : 'Nothing missing — this phone has the whole list.';
+}
 
 async function report() {
   // The build the server has right now, fetched past every cache.
@@ -88,11 +114,29 @@ async function report() {
   ].join('');
 }
 
+const get = async (name) => (await fetch(`./catalog/${name}.json?v=${Date.now()}`, { cache: 'no-store' })).json();
+
+$('btnMissing').addEventListener('click', async () => {
+  const btn = $('btnMissing');
+  btn.disabled = true;
+  try {
+    const added = store.addMissingLabels(catalogLabels || (await get(CATALOG)).labels);
+    $('missingOut').textContent = added.length
+      ? `Added ${added.length}: ${added.slice(0, 6).join(', ')}${added.length > 6 ? '…' : ''}`
+      : 'Nothing was missing.';
+    btn.hidden = true;
+    await report();
+  } catch (err) {
+    $('missingOut').textContent = `Could not add: ${err.message}`;
+  } finally {
+    btn.disabled = false;
+  }
+});
+
 $('btnFix').addEventListener('click', async () => {
   const btn = $('btnFix');
   btn.disabled = true;
   try {
-    const get = async (name) => (await fetch(`./catalog/${name}.json?v=${Date.now()}`, { cache: 'no-store' })).json();
     let renamed = 0, removed = 0, added = 0;
     if (!store.data.seededCatalog) {
       const { labels } = await get(CATALOG);
@@ -108,6 +152,7 @@ $('btnFix').addEventListener('click', async () => {
     }
     $('fixOut').textContent = `Done — ${store.labels.length} labels (${renamed} renamed, ${removed} removed, ${added} added).`;
     await report();
+    await checkMissing();
   } catch (err) {
     $('fixOut').textContent = `Could not update: ${err.message}. Check the signal and try again.`;
   } finally {
@@ -127,6 +172,7 @@ $('btnWipe').addEventListener('click', async () => {
 });
 
 await report();
+await checkMissing();
 </script>
 </body>
 </html>

@@ -138,7 +138,10 @@ Working and verified:
   really has: label count, which revisions are applied, the build the server
   serves now versus the build the phone loads, cache names, service-worker
   count and the address. Two buttons: apply the catalogue and revisions
-  straight to localStorage, and unregister/clear/reload. Linked from Setup.
+  straight to localStorage, "add anything missing" (`store.addMissingLabels()`,
+  which only adds and so can never undo a hand edit — the repair when a phone
+  reports every revision applied yet is short of labels), and
+  unregister/clear/reload. Linked from Setup.
   Keep its `CATALOG` / `REVISIONS` lists in step with `ui.js`.
 - If `ui.js` never runs — a reinstall throws the offline copy away, so one
   dropped connection afterwards leaves a page with nothing to draw — the
