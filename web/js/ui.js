@@ -557,7 +557,7 @@ $('btnPrint').addEventListener('click', async () => {
 // nothing. Both carry the same build string, so the mismatch is detectable:
 // when it happens, throw the offline copy away and reload once.
 
-const BUILD = '2026-09-18.3';
+const BUILD = '2026-09-18.4';
 
 function currentBuild() {
   return document.querySelector('meta[name="app-build"]')?.content || '';
@@ -632,7 +632,7 @@ const CATALOG = 'bassfarms-2026-09-18';
 // gone, and long names were shortened. Applied once, by name, so anything
 // edited by hand survives.
 // Applied in order, each once; a new one is a new file added to this list.
-const REVISIONS = ['revision-2026-09-18', 'revision-2026-09-18b'];
+const REVISIONS = ['revision-2026-09-18', 'revision-2026-09-18b', 'revision-2026-09-18c'];
 
 // The farmers' market has no booth number, so its tags print name and price
 // only. Added once; if it is removed it stays removed.
