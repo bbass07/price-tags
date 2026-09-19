@@ -192,11 +192,12 @@ export class Store extends EventTarget {
 
   /**
    * Change labels the catalogue already put here: `renames` is old name -> new
-   * name, `removes` is a list of names to drop. Matching is by exact name, so
+   * name, `removes` is a list of names to drop, `adds` is labels to append if
+   * that name is not in the library already. Matching is by exact name, so
    * anything the owner has renamed or re-priced by hand is left alone. Applied
    * once per `id`.
    */
-  reviseLabels(id, { renames = {}, removes = [] }) {
+  reviseLabels(id, { renames = {}, removes = [], adds = [] }) {
     if (this.data.revisions?.includes(id)) return null;
     const gone = new Set(removes);
     const before = this.data.labels.length;
@@ -210,9 +211,13 @@ export class Store extends EventTarget {
       label.name = to;
       renamed += 1;
     }
+    const have = new Set(this.data.labels.map((l) => l.name));
+    const fresh = adds.filter((l) => !have.has(l.name));
+    const now = Date.now();
+    this.data.labels.push(...fresh.map((l) => ({ id: uid(), name: l.name, price: l.price, updatedAt: now })));
     this.data.revisions = [...(this.data.revisions || []), id];
     this.save();
-    return { removed: before - this.data.labels.length, renamed };
+    return { removed: before - (this.data.labels.length - fresh.length), renamed, added: fresh.length };
   }
 
   /** Case-insensitive search across name and price. */

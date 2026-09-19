@@ -253,13 +253,17 @@ the instructions, a copy button, and a retest harness in case Bluefy changes it.
   wholesale, bulk, dozen, dispensers or sold-out items (except Hair Therapy,
   BB Hair Therapy and "Shaving Set", which they still sell). Fall / Sol de /
   Repel Away / Monster Spray Away / Pumpkin Spice / Medieval copies share the
-  regular label where the price matches. Names are kept short because a long
+  regular label where the price matches, except Monster Spray, split back out
+  on 2026-09-18 because the owner went looking for it by name and could not
+  find it. Expect the same for other merged lines — split one by adding its
+  own labels in a revision, at the price it already shares. Names are kept short because a long
   one prints small — "Blueberry" is "BB", and see the rename map for the rest.
 - **Changing that library later is a revision, never a re-seed.**
   `store.seedLabels()` runs once ever (it checks `seededCatalog` is unset), so
   a second catalogue file would be ignored on the owner's phone. Changes go in
   `web/catalog/revision-<date>.json` — `{ id, renames: {old: new}, removes: [] }`
-  — applied by `store.reviseLabels()` once per `id` (recorded in `revisions`)
+  — with an optional `adds: [{name, price}]` — applied by `store.reviseLabels()`
+  once per `id` (recorded in `revisions`)
   and matched by exact name, so a label the owner renamed or re-priced by hand
   is left alone. `ui.js` holds `CATALOG` and `REVISIONS`, a list applied in
   order; a further change is a new file appended to that list, never an edit to
